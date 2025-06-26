@@ -1,6 +1,6 @@
 'use client'
 
-import { Link } from 'react-router-dom'
+import Link from 'next/link'
 
 const Hero = () => {
   return (
@@ -19,7 +19,7 @@ const Hero = () => {
             <span className="text-emerald-400">SEA</span> Catering
           </h1>
           <p className="text-xl md:text-2xl text-gray-100 mb-8 font-medium drop-shadow-md">
-            "Healthy Meals, Anytime, Anywhere"
+            &quot;Healthy Meals, Anytime, Anywhere&quot;
           </p>
           <p className="text-lg text-gray-200 leading-relaxed max-w-3xl mx-auto drop-shadow-md mb-12">
             Welcome to SEA Catering, your premier destination for customizable healthy meal services. 
@@ -29,7 +29,7 @@ const Hero = () => {
           
           <div className="mt-8">
             <Link 
-              to="/subscription" 
+              href="/subscription" 
               className="inline-block bg-emerald-500 text-white py-3 px-6 rounded-lg text-lg font-semibold hover:bg-emerald-600 transition-colors no-underline"
             >
               Order Now

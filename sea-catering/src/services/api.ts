@@ -1,5 +1,5 @@
 // API configuration
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
 // Generic API error handler
 const handleApiError = (error: any) => {
@@ -12,6 +12,45 @@ const handleApiError = (error: any) => {
   }
 };
 
+// Helper function to get CSRF token from cookies
+const getCSRFToken = (): string | null => {
+  if (typeof document === 'undefined') return null;
+  
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; csrf-token=`);
+  if (parts.length === 2) {
+    return parts.pop()?.split(';').shift() || null;
+  }
+  return null;
+};
+
+// Helper function to sanitize input on client side
+const sanitizeInput = (input: any): any => {
+  if (typeof input === 'string') {
+    return input
+      .replace(/[<>]/g, '') // Remove < and > characters
+      .replace(/javascript:/gi, '') // Remove javascript: protocol
+      .replace(/on\w+\s*=/gi, '') // Remove on* event handlers
+      .trim();
+  }
+  
+  if (Array.isArray(input)) {
+    return input.map(sanitizeInput);
+  }
+  
+  if (typeof input === 'object' && input !== null) {
+    const sanitized: any = {};
+    for (const key in input) {
+      if (input.hasOwnProperty(key)) {
+        sanitized[key] = sanitizeInput(input[key]);
+      }
+    }
+    return sanitized;
+  }
+  
+  return input;
+};
+
 // Generic fetch function with error handling
 const apiFetch = async (endpoint: string, options: RequestInit = {}) => {
   const url = `${API_BASE_URL}${endpoint}`;
@@ -20,20 +59,48 @@ const apiFetch = async (endpoint: string, options: RequestInit = {}) => {
     headers: {
       'Content-Type': 'application/json',
     },
+    // Add credentials for CORS
+    credentials: 'include',
   };
+
+  // Add CSRF token for non-GET requests
+  if (options.method && !['GET', 'HEAD'].includes(options.method)) {
+    const csrfToken = getCSRFToken();
+    if (csrfToken) {
+      defaultOptions.headers = {
+        ...defaultOptions.headers,
+        'X-CSRF-Token': csrfToken
+      };
+    }
+  }
 
   const config = { ...defaultOptions, ...options };
 
-  try {
-    const response = await fetch(url, config);
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.error || `HTTP error! status: ${response.status}`);
+  // Sanitize request body if present
+  if (config.body && typeof config.body === 'string') {
+    try {
+      const bodyData = JSON.parse(config.body);
+      const sanitizedData = sanitizeInput(bodyData);
+      config.body = JSON.stringify(sanitizedData);
+    } catch (e) {
+      // If not JSON, sanitize as string
+      config.body = sanitizeInput(config.body);
     }
+  }
 
+  try {
+    console.log(`Making API request to: ${url}`);
+    const response = await fetch(url, config);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    console.log(`API response from ${url}:`, data);
     return data;
   } catch (error) {
+    console.error(`API error for ${url}:`, error);
     handleApiError(error);
   }
 };

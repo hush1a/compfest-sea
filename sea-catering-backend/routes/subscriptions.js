@@ -1,23 +1,23 @@
 const express = require('express');
 const { body, validationResult } = require('express-validator');
 const Subscription = require('../models/Subscription');
+const { authenticate, authorize, requireAdmin, requireOwnershipOrAdmin } = require('../middleware/auth');
 
 const router = express.Router();
 
 // Validation middleware for subscription creation
 const validateSubscription = [
-  body('name')
-    .trim()
-    .isLength({ min: 2 })
-    .withMessage('Name must be at least 2 characters long'),
-  
   body('phone')
+    .trim()
     .matches(/^(\+62|62|0)[0-9]{9,13}$/)
-    .withMessage('Please enter a valid Indonesian phone number'),
+    .withMessage('Please enter a valid Indonesian phone number')
+    .escape(), // HTML escape for XSS prevention
   
   body('plan')
+    .trim()
     .isIn(['diet', 'protein', 'royal'])
-    .withMessage('Plan must be diet, protein, or royal'),
+    .withMessage('Plan must be diet, protein, or royal')
+    .escape(),
   
   body('mealTypes')
     .isArray({ min: 1 })
@@ -40,6 +40,23 @@ const validateSubscription = [
   body('allergies')
     .optional()
     .trim()
+    .isLength({ max: 500 })
+    .withMessage('Allergies description cannot exceed 500 characters')
+    .escape(), // HTML escape for XSS prevention
+    
+  body('specialInstructions')
+    .optional()
+    .trim()
+    .isLength({ max: 1000 })
+    .withMessage('Special instructions cannot exceed 1000 characters')
+    .escape(), // HTML escape for XSS prevention
+    
+  body('deliveryAddress')
+    .optional()
+    .trim()
+    .isLength({ min: 10, max: 500 })
+    .withMessage('Delivery address must be between 10 and 500 characters')
+    .escape() // HTML escape for XSS prevention
 ];
 
 // Helper function to handle validation errors
@@ -57,8 +74,8 @@ const handleValidationErrors = (req, res, next) => {
   next();
 };
 
-// GET /api/subscriptions - Get all subscriptions with optional filters
-router.get('/', async (req, res) => {
+// GET /api/subscriptions - Get subscriptions (Admin: all, User: own subscriptions)
+router.get('/', authenticate, async (req, res) => {
   try {
     const {
       page = 1,
@@ -71,6 +88,12 @@ router.get('/', async (req, res) => {
 
     // Build filter object
     const filter = {};
+    
+    // Non-admin users can only see their own subscriptions
+    if (req.user.role !== 'admin') {
+      filter.userId = req.user._id;
+    }
+    
     if (plan) filter.plan = plan;
     if (status) filter.status = status;
 
@@ -81,12 +104,19 @@ router.get('/', async (req, res) => {
     // Calculate pagination
     const skip = (page - 1) * limit;
 
-    // Execute query with pagination
-    const subscriptions = await Subscription.find(filter)
+    // Execute query with pagination and populate user info for admins
+    let query = Subscription.find(filter)
       .sort(sort)
       .limit(parseInt(limit))
       .skip(skip)
-      .select('-__v'); // Exclude version field
+      .select('-__v');
+    
+    // Populate user information for admin users
+    if (req.user.role === 'admin') {
+      query = query.populate('userId', 'fullName email role createdAt');
+    }
+    
+    const subscriptions = await query;
 
     // Get total count for pagination info
     const total = await Subscription.countDocuments(filter);
@@ -112,15 +142,30 @@ router.get('/', async (req, res) => {
   }
 });
 
-// GET /api/subscriptions/:id - Get subscription by ID
-router.get('/:id', async (req, res) => {
+// GET /api/subscriptions/:id - Get subscription by ID (with ownership check)
+router.get('/:id', authenticate, async (req, res) => {
   try {
-    const subscription = await Subscription.findById(req.params.id).select('-__v');
+    let query = Subscription.findById(req.params.id).select('-__v');
+    
+    // Populate user info for admins
+    if (req.user.role === 'admin') {
+      query = query.populate('userId', 'fullName email role createdAt');
+    }
+    
+    const subscription = await query;
     
     if (!subscription) {
       return res.status(404).json({
         error: 'Subscription not found',
         message: `No subscription found with ID: ${req.params.id}`
+      });
+    }
+
+    // Check ownership - users can only access their own subscriptions
+    if (req.user.role !== 'admin' && subscription.userId.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        error: 'Access forbidden',
+        message: 'You can only access your own subscriptions'
       });
     }
 
@@ -146,11 +191,12 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// POST /api/subscriptions - Create new subscription
-router.post('/', validateSubscription, handleValidationErrors, async (req, res) => {
+// POST /api/subscriptions - Create new subscription (authenticated users only)
+router.post('/', authenticate, validateSubscription, handleValidationErrors, async (req, res) => {
   try {
     const subscriptionData = {
-      name: req.body.name,
+      userId: req.user._id, // Associate with authenticated user
+      name: req.body.name || req.user.fullName, // Use provided name or user's full name
       phone: req.body.phone,
       plan: req.body.plan,
       mealTypes: req.body.mealTypes,
@@ -177,11 +223,29 @@ router.post('/', validateSubscription, handleValidationErrors, async (req, res) 
   }
 });
 
-// PUT /api/subscriptions/:id - Update subscription
-router.put('/:id', validateSubscription, handleValidationErrors, async (req, res) => {
+// PUT /api/subscriptions/:id - Update subscription (with ownership check)
+router.put('/:id', authenticate, validateSubscription, handleValidationErrors, async (req, res) => {
   try {
+    // First check if subscription exists and user has access
+    const existingSubscription = await Subscription.findById(req.params.id);
+    
+    if (!existingSubscription) {
+      return res.status(404).json({
+        error: 'Subscription not found',
+        message: `No subscription found with ID: ${req.params.id}`
+      });
+    }
+
+    // Check ownership - users can only update their own subscriptions
+    if (req.user.role !== 'admin' && existingSubscription.userId.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        error: 'Access forbidden',
+        message: 'You can only update your own subscriptions'
+      });
+    }
+
     const updateData = {
-      name: req.body.name,
+      name: req.body.name || existingSubscription.name,
       phone: req.body.phone,
       plan: req.body.plan,
       mealTypes: req.body.mealTypes,
@@ -197,13 +261,6 @@ router.put('/:id', validateSubscription, handleValidationErrors, async (req, res
         runValidators: true // Run schema validators
       }
     ).select('-__v');
-
-    if (!subscription) {
-      return res.status(404).json({
-        error: 'Subscription not found',
-        message: `No subscription found with ID: ${req.params.id}`
-      });
-    }
 
     res.status(200).json({
       success: true,
@@ -228,8 +285,8 @@ router.put('/:id', validateSubscription, handleValidationErrors, async (req, res
   }
 });
 
-// PATCH /api/subscriptions/:id/status - Update subscription status
-router.patch('/:id/status', async (req, res) => {
+// PATCH /api/subscriptions/:id/status - Update subscription status (with ownership check)
+router.patch('/:id/status', authenticate, async (req, res) => {
   try {
     const { status } = req.body;
     
@@ -240,18 +297,29 @@ router.patch('/:id/status', async (req, res) => {
       });
     }
 
-    const subscription = await Subscription.findByIdAndUpdate(
-      req.params.id,
-      { status },
-      { new: true, runValidators: true }
-    ).select('-__v');
-
-    if (!subscription) {
+    // First check if subscription exists and user has access
+    const existingSubscription = await Subscription.findById(req.params.id);
+    
+    if (!existingSubscription) {
       return res.status(404).json({
         error: 'Subscription not found',
         message: `No subscription found with ID: ${req.params.id}`
       });
     }
+
+    // Check ownership - users can only update their own subscriptions
+    if (req.user.role !== 'admin' && existingSubscription.userId.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        error: 'Access forbidden',
+        message: 'You can only update your own subscriptions'
+      });
+    }
+
+    const subscription = await Subscription.findByIdAndUpdate(
+      req.params.id,
+      { status },
+      { new: true, runValidators: true }
+    ).select('-__v');
 
     res.status(200).json({
       success: true,
@@ -275,17 +343,28 @@ router.patch('/:id/status', async (req, res) => {
   }
 });
 
-// DELETE /api/subscriptions/:id - Delete subscription
-router.delete('/:id', async (req, res) => {
+// DELETE /api/subscriptions/:id - Delete subscription (admin only or own subscription)
+router.delete('/:id', authenticate, async (req, res) => {
   try {
-    const subscription = await Subscription.findByIdAndDelete(req.params.id);
-
-    if (!subscription) {
+    // First check if subscription exists
+    const existingSubscription = await Subscription.findById(req.params.id);
+    
+    if (!existingSubscription) {
       return res.status(404).json({
         error: 'Subscription not found',
         message: `No subscription found with ID: ${req.params.id}`
       });
     }
+
+    // Check ownership - users can only delete their own subscriptions, admins can delete any
+    if (req.user.role !== 'admin' && existingSubscription.userId.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        error: 'Access forbidden',
+        message: 'You can only delete your own subscriptions'
+      });
+    }
+
+    const subscription = await Subscription.findByIdAndDelete(req.params.id);
 
     res.status(200).json({
       success: true,
@@ -309,8 +388,8 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
-// GET /api/subscriptions/stats/overview - Get subscription statistics
-router.get('/stats/overview', async (req, res) => {
+// GET /api/subscriptions/stats/overview - Get subscription statistics (admin only)
+router.get('/stats/overview', requireAdmin, async (req, res) => {
   try {
     const totalSubscriptions = await Subscription.countDocuments();
     const activeSubscriptions = await Subscription.countDocuments({ status: 'active' });

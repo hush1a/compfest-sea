@@ -51,8 +51,7 @@ const SubscriptionForm = () => {
     register,
     handleSubmit,
     formState: { errors },
-    setValue,
-    watch
+    setValue
   } = useForm<SubscriptionFormData>({
     defaultValues: {
       name: '',

@@ -1,9 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useRouter } from 'next/navigation'
 import Modal from './Modal'
 import { MealPlan } from '../data/mealPlans'
+import { useAuth } from '@/contexts/AuthContext'
 
 interface MealPlanCardProps {
   mealPlan: MealPlan
@@ -11,6 +12,18 @@ interface MealPlanCardProps {
 
 const MealPlanCard: React.FC<MealPlanCardProps> = ({ mealPlan }) => {
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const { isAuthenticated } = useAuth()
+  const router = useRouter()
+
+  const handleSubscribeClick = () => {
+    if (!isAuthenticated) {
+      // Redirect to login page if not authenticated
+      router.push('/login')
+    } else {
+      // Navigate to subscription page if authenticated
+      router.push('/subscription')
+    }
+  }
 
   return (
     <>
@@ -60,12 +73,12 @@ const MealPlanCard: React.FC<MealPlanCardProps> = ({ mealPlan }) => {
             >
               See More Details
             </button>
-            <Link 
-              to="/subscription"
+            <button 
+              onClick={handleSubscribeClick}
               className="flex-1 bg-gray-100 text-gray-700 py-3 px-4 rounded-lg font-semibold hover:bg-gray-200 transition-colors text-center"
             >
-              Subscribe Now
-            </Link>
+              {isAuthenticated ? 'Subscribe Now' : 'Login to Order'}
+            </button>
           </div>
         </div>
       </div>
@@ -159,12 +172,12 @@ const MealPlanCard: React.FC<MealPlanCardProps> = ({ mealPlan }) => {
             )}
 
             <div className="flex gap-4 pt-6 border-t">
-              <Link 
-                to="/subscription"
+              <button 
+                onClick={handleSubscribeClick}
                 className="flex-1 bg-emerald-500 text-white py-3 px-6 rounded-lg font-semibold hover:bg-emerald-600 transition-colors text-center"
               >
-                Subscribe to This Plan
-              </Link>
+                {isAuthenticated ? 'Subscribe to This Plan' : 'Login to Subscribe'}
+              </button>
               <button 
                 onClick={() => setIsModalOpen(false)}
                 className="flex-1 bg-gray-100 text-gray-700 py-3 px-6 rounded-lg font-semibold hover:bg-gray-200 transition-colors"

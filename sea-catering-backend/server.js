@@ -2,12 +2,25 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const cookieParser = require('cookie-parser');
 require('dotenv').config();
 
 // Import database connection
 const connectDB = require('./config/database');
 
+// Import security middleware
+const { 
+  sanitizeInput, 
+  rateLimiters, 
+  mongoSanitize, 
+  securityHeaders,
+  csrfProtection,
+  setCSRFToken
+} = require('./middleware/security');
+
 // Import routes
+const authRoutes = require('./routes/auth');
+const adminRoutes = require('./routes/admin');
 const subscriptionRoutes = require('./routes/subscriptions');
 const mealPlanRoutes = require('./routes/mealPlans');
 const testimonialRoutes = require('./routes/testimonials');
@@ -20,29 +33,42 @@ connectDB();
 
 // Security middleware
 app.use(helmet());
+app.use(securityHeaders);
 
-// Rate limiting
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
-  message: {
-    error: 'Too many requests from this IP, please try again later.'
-  }
-});
-app.use(limiter);
+// MongoDB injection prevention
+app.use(mongoSanitize);
+
+// Input sanitization (must be before body parsing)
+app.use(sanitizeInput);
+
+// Rate limiting - apply general rate limiting to all routes
+app.use(rateLimiters.general);
 
 // CORS configuration
 const corsOptions = {
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  origin: [
+    process.env.FRONTEND_URL || 'http://localhost:3000',
+    'http://localhost:3001',
+    'http://localhost:3002'
+  ],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
 };
 app.use(cors(corsOptions));
 
+// Cookie parsing middleware
+app.use(cookieParser());
+
+// CSRF token setup
+app.use(setCSRFToken);
+
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// CSRF protection for state-changing operations
+app.use(csrfProtection);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -54,8 +80,17 @@ app.get('/health', (req, res) => {
   });
 });
 
-// API routes
-app.use('/api/subscriptions', subscriptionRoutes);
+// CSRF token endpoint
+app.get('/api/csrf-token', (req, res) => {
+  res.json({
+    csrfToken: req.cookies['csrf-token']
+  });
+});
+
+// API routes with specific rate limiting
+app.use('/api/auth', rateLimiters.auth, authRoutes);
+app.use('/api/admin', rateLimiters.write, adminRoutes);
+app.use('/api/subscriptions', rateLimiters.write, subscriptionRoutes);
 app.use('/api/meal-plans', mealPlanRoutes);
 app.use('/api/testimonials', testimonialRoutes);
 
@@ -63,9 +98,11 @@ app.use('/api/testimonials', testimonialRoutes);
 app.get('/', (req, res) => {
   res.json({
     message: 'Welcome to SEA Catering API',
-    version: '1.0.0',
+    version: '2.0.0',
     documentation: '/api/docs',
     endpoints: {
+      authentication: '/api/auth',
+      admin: '/api/admin',
       subscriptions: '/api/subscriptions',
       mealPlans: '/api/meal-plans',
       testimonials: '/api/testimonials',

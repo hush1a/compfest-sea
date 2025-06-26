@@ -1,10 +1,16 @@
 const mongoose = require('mongoose');
 
 const subscriptionSchema = new mongoose.Schema({
-  // Personal Information
+  // User Association
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: [true, 'User ID is required']
+  },
+  
+  // Personal Information (can override user's info if needed)
   name: {
     type: String,
-    required: [true, 'Full name is required'],
     trim: true,
     minlength: [2, 'Name must be at least 2 characters long']
   },
@@ -65,6 +71,13 @@ const subscriptionSchema = new mongoose.Schema({
   timestamps: true // Adds createdAt and updatedAt automatically
 });
 
+// Indexes for better query performance
+subscriptionSchema.index({ userId: 1 });
+subscriptionSchema.index({ status: 1 });
+subscriptionSchema.index({ plan: 1 });
+subscriptionSchema.index({ createdAt: -1 });
+subscriptionSchema.index({ userId: 1, status: 1 }); // Compound index for user's subscriptions by status
+
 // Validation: At least one meal type must be selected
 subscriptionSchema.path('mealTypes').validate(function(value) {
   return value && value.length > 0;
@@ -74,6 +87,23 @@ subscriptionSchema.path('mealTypes').validate(function(value) {
 subscriptionSchema.path('deliveryDays').validate(function(value) {
   return value && value.length > 0;
 }, 'At least one delivery day must be selected');
+
+// Pre-save middleware to auto-populate name from user if not provided
+subscriptionSchema.pre('save', async function(next) {
+  // Auto-populate name from user if not provided
+  if (this.isNew && !this.name && this.userId) {
+    try {
+      const User = mongoose.model('User');
+      const user = await User.findById(this.userId);
+      if (user) {
+        this.name = user.fullName;
+      }
+    } catch (error) {
+      console.error('Error populating name from user:', error);
+    }
+  }
+  next();
+});
 
 // Pre-save middleware to calculate total price
 subscriptionSchema.pre('save', function(next) {
