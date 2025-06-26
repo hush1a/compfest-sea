@@ -1,3 +1,5 @@
+'use client'
+
 import { Link } from 'react-router-dom'
 
 const Hero = () => {
@@ -27,7 +29,7 @@ const Hero = () => {
           
           <div className="mt-8">
             <Link 
-              to="/menu" 
+              to="/subscription" 
               className="inline-block bg-emerald-500 text-white py-3 px-6 rounded-lg text-lg font-semibold hover:bg-emerald-600 transition-colors no-underline"
             >
               Order Now

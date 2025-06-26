@@ -1,4 +1,7 @@
+'use client'
+
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import Modal from './Modal'
 import { MealPlan } from '../data/mealPlans'
 
@@ -28,7 +31,7 @@ const MealPlanCard: React.FC<MealPlanCardProps> = ({ mealPlan }) => {
             <h3 className="text-xl font-bold text-gray-800">{mealPlan.name}</h3>
             <div className="text-right">
               <div className="text-2xl font-bold text-emerald-500">{mealPlan.price}</div>
-              <div className="text-sm text-gray-500">per {mealPlan.period.toLowerCase()}</div>
+              <div className="text-sm text-gray-500">{mealPlan.period}</div>
             </div>
           </div>
           
@@ -57,9 +60,12 @@ const MealPlanCard: React.FC<MealPlanCardProps> = ({ mealPlan }) => {
             >
               See More Details
             </button>
-            <button className="flex-1 bg-gray-100 text-gray-700 py-3 px-4 rounded-lg font-semibold hover:bg-gray-200 transition-colors">
-              Order Now
-            </button>
+            <Link 
+              to="/subscription"
+              className="flex-1 bg-gray-100 text-gray-700 py-3 px-4 rounded-lg font-semibold hover:bg-gray-200 transition-colors text-center"
+            >
+              Subscribe Now
+            </Link>
           </div>
         </div>
       </div>
@@ -71,7 +77,7 @@ const MealPlanCard: React.FC<MealPlanCardProps> = ({ mealPlan }) => {
               <h2 className="text-3xl font-bold text-gray-800">{mealPlan.name}</h2>
               <div className="text-right">
                 <div className="text-3xl font-bold text-emerald-500">{mealPlan.price}</div>
-                <div className="text-sm text-gray-500">per {mealPlan.period.toLowerCase()}</div>
+                <div className="text-sm text-gray-500">{mealPlan.period}</div>
               </div>
             </div>
             <img 
@@ -153,9 +159,12 @@ const MealPlanCard: React.FC<MealPlanCardProps> = ({ mealPlan }) => {
             )}
 
             <div className="flex gap-4 pt-6 border-t">
-              <button className="flex-1 bg-emerald-500 text-white py-3 px-6 rounded-lg font-semibold hover:bg-emerald-600 transition-colors">
-                Order This Plan
-              </button>
+              <Link 
+                to="/subscription"
+                className="flex-1 bg-emerald-500 text-white py-3 px-6 rounded-lg font-semibold hover:bg-emerald-600 transition-colors text-center"
+              >
+                Subscribe to This Plan
+              </Link>
               <button 
                 onClick={() => setIsModalOpen(false)}
                 className="flex-1 bg-gray-100 text-gray-700 py-3 px-6 rounded-lg font-semibold hover:bg-gray-200 transition-colors"

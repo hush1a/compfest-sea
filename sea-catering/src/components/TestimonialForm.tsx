@@ -1,9 +1,13 @@
+'use client'
+
 import { useState } from 'react'
 
 interface TestimonialFormData {
   name: string
   message: string
   rating: number
+  plan?: string
+  location?: string
 }
 
 interface TestimonialFormProps {
@@ -14,7 +18,9 @@ const TestimonialForm: React.FC<TestimonialFormProps> = ({ onSubmit }) => {
   const [formData, setFormData] = useState<TestimonialFormData>({
     name: '',
     message: '',
-    rating: 5
+    rating: 5,
+    plan: '',
+    location: ''
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
@@ -33,7 +39,7 @@ const TestimonialForm: React.FC<TestimonialFormProps> = ({ onSubmit }) => {
     onSubmit(formData)
     
     // Reset form
-    setFormData({ name: '', message: '', rating: 5 })
+    setFormData({ name: '', message: '', rating: 5, plan: '', location: '' })
     setIsSubmitting(false)
     setShowSuccess(true)
     
@@ -104,6 +110,37 @@ const TestimonialForm: React.FC<TestimonialFormProps> = ({ onSubmit }) => {
               {formData.rating} out of 5 stars
             </span>
           </div>
+        </div>
+
+        <div>
+          <label htmlFor="plan" className="block text-sm font-medium text-gray-700 mb-2">
+            Which Plan Did You Try? (Optional)
+          </label>
+          <select
+            id="plan"
+            value={formData.plan}
+            onChange={(e) => setFormData(prev => ({ ...prev, plan: e.target.value }))}
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors text-gray-900"
+          >
+            <option value="">Select a plan (optional)</option>
+            <option value="diet">Diet Plan</option>
+            <option value="protein">Protein Plan</option>
+            <option value="royal">Royal Plan</option>
+          </select>
+        </div>
+
+        <div>
+          <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-2">
+            Your Location (Optional)
+          </label>
+          <input
+            type="text"
+            id="location"
+            value={formData.location}
+            onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors text-gray-900 placeholder-gray-500"
+            placeholder="e.g., Jakarta, Surabaya, Bandung"
+          />
         </div>
 
         <div>

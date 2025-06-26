@@ -1,3 +1,5 @@
+'use client'
+
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 
@@ -7,8 +9,8 @@ const Navigation = () => {
 
   const navigationItems = [
     { id: 'home', label: 'Home', path: '/' },
-    { id: 'menu', label: 'Menu / Meal Plans', path: '/menu' },
-    { id: 'subscription', label: 'Subscription', path: '/subscription' },
+    { id: 'menu', label: 'Meal Plans', path: '/menu' },
+    { id: 'subscription', label: 'Subscribe', path: '/subscription' },
     { id: 'testimonials', label: 'Testimonials', path: '/testimonials' },
     { id: 'contact', label: 'Contact Us', path: '/contact' }
   ]

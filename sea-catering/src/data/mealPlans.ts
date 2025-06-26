@@ -20,89 +20,89 @@ export interface MealPlan {
 export const mealPlansData: MealPlan[] = [
   {
     id: 1,
-    name: "Healthy Balance",
-    price: "Rp 1.250.000",
-    period: "Weekly",
-    description: "Perfect for those seeking a balanced approach to healthy eating with portion-controlled meals.",
+    name: "Diet Plan",
+    price: "Rp 30.000",
+    period: "per meal",
+    description: "Perfect for those seeking a balanced approach to healthy eating with portion-controlled, nutritious meals.",
     image: "/api/placeholder/400/300",
     features: [
-      "7 breakfast meals",
-      "7 lunch meals", 
-      "7 dinner meals",
+      "Calorie-controlled portions",
+      "Fresh, wholesome ingredients", 
       "Balanced macronutrients",
-      "Fresh ingredients daily",
-      "Nutritionist approved"
+      "Weight management support",
+      "Nutritionist approved",
+      "Daily delivery available"
     ],
-    detailedDescription: "Our Healthy Balance plan is designed for individuals who want to maintain a nutritious diet without compromising on taste. Each meal is carefully crafted to provide optimal nutrition while keeping you satisfied throughout the day.",
+    detailedDescription: "Our Diet Plan is designed for individuals who want to maintain a healthy weight while enjoying delicious, nutritious meals. Each meal is carefully crafted to provide optimal nutrition with controlled portions.",
     nutritionInfo: {
-      calories: "1,800",
-      protein: "120g",
-      carbs: "180g",
-      fat: "60g"
+      calories: "400-500",
+      protein: "25-30g",
+      carbs: "40-50g",
+      fat: "15-20g"
     },
     sampleMeals: [
-      "Breakfast: Overnight oats with berries and nuts",
+      "Breakfast: Greek yogurt with berries and granola",
       "Lunch: Grilled chicken salad with quinoa",
-      "Dinner: Baked salmon with roasted vegetables"
+      "Dinner: Baked fish with steamed vegetables"
     ],
-    dietaryInfo: ["Gluten-Free Options", "Dairy-Free Available", "Low Sodium"]
+    dietaryInfo: ["Low Calorie", "Portion Controlled", "Balanced Nutrition"]
   },
   {
     id: 2,
-    name: "Plant Power",
-    price: "Rp 980.000",
-    period: "Weekly",
-    description: "Delicious plant-based meals that prove vegetarian eating can be both satisfying and nutritious.",
+    name: "Protein Plan",
+    price: "Rp 40.000",
+    period: "per meal",
+    description: "High-protein meals designed for active individuals and fitness enthusiasts looking to optimize their performance.",
     image: "/api/placeholder/400/300",
     features: [
-      "100% plant-based",
-      "Protein-rich legumes",
-      "Seasonal vegetables",
-      "Whole grain options",
-      "Superfood ingredients",
-      "Environmentally conscious"
+      "High-protein content (30g+)",
+      "Lean meat and fish options",
+      "Post-workout meal support",
+      "Muscle building nutrition",
+      "Energy optimization",
+      "Performance focused recipes"
     ],
-    detailedDescription: "Our Plant Power plan showcases the incredible variety and nutrition available in plant-based eating. Each meal is designed to provide complete nutrition while supporting sustainable eating practices.",
+    detailedDescription: "Our Protein Plan is specifically designed for athletes, fitness enthusiasts, and anyone looking to increase their protein intake. Each meal is crafted to support muscle building, recovery, and overall performance.",
     nutritionInfo: {
-      calories: "1,600",
-      protein: "80g",
-      carbs: "200g",
-      fat: "50g"
+      calories: "500-600",
+      protein: "35-45g",
+      carbs: "30-40g",
+      fat: "20-25g"
     },
     sampleMeals: [
-      "Breakfast: Chia pudding with almond butter",
-      "Lunch: Buddha bowl with tahini dressing",
-      "Dinner: Lentil curry with quinoa"
+      "Breakfast: Protein pancakes with Greek yogurt",
+      "Lunch: Grilled chicken breast with sweet potato",
+      "Dinner: Lean beef stir-fry with quinoa"
     ],
-    dietaryInfo: ["100% Vegan", "Organic Options", "Sustainable", "Fiber Rich"]
+    dietaryInfo: ["High Protein", "Muscle Building", "Post-Workout Optimized"]
   },
   {
     id: 3,
-    name: "Mediterranean",
-    price: "Rp 1.450.000",
-    period: "Weekly",
-    description: "Fresh, flavorful meals inspired by the Mediterranean diet known for its health benefits and delicious taste.",
+    name: "Royal Plan",
+    price: "Rp 60.000",
+    period: "per meal",
+    description: "Premium gourmet meals with the finest ingredients, perfect for those who want luxury dining at home.",
     image: "/api/placeholder/400/300",
     features: [
-      "Mediterranean diet based",
-      "Olive oil and herbs",
-      "Fresh seafood",
-      "Whole grains",
-      "Seasonal produce",
-      "Heart-healthy fats"
+      "Premium gourmet ingredients",
+      "Chef-crafted recipes",
+      "Luxurious presentation",
+      "Exotic and rare ingredients",
+      "Fine dining experience",
+      "Artisanal preparation"
     ],
-    detailedDescription: "Experience the flavors of the Mediterranean with our carefully curated meal plan. Rich in healthy fats, fresh vegetables, and lean proteins, this plan supports heart health while delivering exceptional taste.",
+    detailedDescription: "Experience fine dining at home with our Royal Plan. Featuring premium ingredients, chef-crafted recipes, and restaurant-quality presentation delivered to your doorstep.",
     nutritionInfo: {
-      calories: "1,900",
-      protein: "110g",
-      carbs: "160g",
-      fat: "90g"
+      calories: "600-700",
+      protein: "30-40g",
+      carbs: "50-60g",
+      fat: "25-35g"
     },
     sampleMeals: [
-      "Breakfast: Greek yogurt with honey and walnuts",
-      "Lunch: Mediterranean quinoa salad",
-      "Dinner: Herb-crusted fish with roasted vegetables"
+      "Breakfast: Truffle scrambled eggs with smoked salmon",
+      "Lunch: Wagyu beef salad with arugula",
+      "Dinner: Pan-seared duck breast with seasonal vegetables"
     ],
-    dietaryInfo: ["Heart Healthy", "Mediterranean Style", "Omega-3 Rich", "Antioxidant Rich"]
+    dietaryInfo: ["Gourmet", "Premium Ingredients", "Fine Dining Quality"]
   }
 ]

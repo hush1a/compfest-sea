@@ -1,14 +1,20 @@
-import Subscription from '../components/Subscription'
+import SubscriptionForm from '../components/SubscriptionForm'
 import PageHeader from '../components/PageHeader'
 
 const SubscriptionPage = () => {
   return (
     <div className="pt-16">
       <PageHeader 
-        title="Subscription Plans"
-        description="Choose the perfect subscription plan that fits your lifestyle and budget. All plans include free delivery across Indonesia."
+        title="Create Your Subscription"
+        description="Fill out the form below to customize your meal plan and start your healthy eating journey with SEA Catering."
       />
-      <Subscription />
+      
+      {/* Subscription Form Section */}
+      <section id="subscription-form" className="py-16 bg-gray-50">
+        <div className="container mx-auto px-6">
+          <SubscriptionForm />
+        </div>
+      </section>
       
       {/* Additional subscription benefits */}
       <section className="py-16 bg-white">
