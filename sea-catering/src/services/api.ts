@@ -136,8 +136,79 @@ export const subscriptionApi = {
     });
   },
 
+  pause: async (id: string, startDate: string, endDate: string, reason?: string) => {
+    return await apiFetch(`/subscriptions/${id}/pause`, {
+      method: 'PATCH',
+      body: JSON.stringify({ startDate, endDate, reason }),
+    });
+  },
+
+  cancel: async (id: string, reason?: string) => {
+    return await apiFetch(`/subscriptions/${id}/cancel`, {
+      method: 'PATCH',
+      body: JSON.stringify({ reason }),
+    });
+  },
+
+  reactivate: async (id: string) => {
+    return await apiFetch(`/subscriptions/${id}/reactivate`, {
+      method: 'PATCH',
+    });
+  },
+
+  getUserSubscriptions: async () => {
+    return await apiFetch('/subscriptions');
+  },
+
   getStats: async () => {
     return await apiFetch('/subscriptions/stats/overview');
+  }
+};
+
+// Admin API functions
+export const adminApi = {
+  getAnalyticsOverview: async (startDate?: string, endDate?: string) => {
+    const params = new URLSearchParams();
+    if (startDate) params.append('startDate', startDate);
+    if (endDate) params.append('endDate', endDate);
+    
+    const endpoint = params.toString() ? `/admin/analytics/overview?${params}` : '/admin/analytics/overview';
+    return await apiFetch(endpoint);
+  },
+
+  getRevenueAnalytics: async (startDate?: string, endDate?: string, groupBy?: 'day' | 'week' | 'month') => {
+    const params = new URLSearchParams();
+    if (startDate) params.append('startDate', startDate);
+    if (endDate) params.append('endDate', endDate);
+    if (groupBy) params.append('groupBy', groupBy);
+    
+    const endpoint = params.toString() ? `/admin/analytics/revenue?${params}` : '/admin/analytics/revenue';
+    return await apiFetch(endpoint);
+  },
+
+  getSubscriptionAnalytics: async (startDate?: string, endDate?: string) => {
+    const params = new URLSearchParams();
+    if (startDate) params.append('startDate', startDate);
+    if (endDate) params.append('endDate', endDate);
+    
+    const endpoint = params.toString() ? `/admin/analytics/subscriptions?${params}` : '/admin/analytics/subscriptions';
+    return await apiFetch(endpoint);
+  },
+
+  getUsers: async (params?: { 
+    page?: number; 
+    limit?: number; 
+    search?: string; 
+    role?: string 
+  }) => {
+    const queryParams = new URLSearchParams();
+    if (params?.page) queryParams.append('page', params.page.toString());
+    if (params?.limit) queryParams.append('limit', params.limit.toString());
+    if (params?.search) queryParams.append('search', params.search);
+    if (params?.role) queryParams.append('role', params.role);
+    
+    const endpoint = queryParams.toString() ? `/admin/users?${queryParams}` : '/admin/users';
+    return await apiFetch(endpoint);
   }
 };
 

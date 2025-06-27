@@ -396,4 +396,301 @@ router.post('/users', authenticate, requireAdmin, [
   }
 });
 
+// GET /api/admin/analytics/overview - Get overview analytics with date filtering
+router.get('/analytics/overview', authenticate, requireAdmin, async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+    
+    // Default to last 30 days if no dates provided
+    const start = startDate ? new Date(startDate) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const end = endDate ? new Date(endDate) : new Date();
+    
+    // Ensure end date is end of day
+    end.setHours(23, 59, 59, 999);
+    
+    // New Subscriptions in date range
+    const newSubscriptions = await Subscription.countDocuments({
+      createdAt: { $gte: start, $lte: end }
+    });
+
+    // Monthly Recurring Revenue (from active subscriptions created in date range)
+    const mrrData = await Subscription.aggregate([
+      {
+        $match: {
+          createdAt: { $gte: start, $lte: end },
+          status: 'active'
+        }
+      },
+      {
+        $group: {
+          _id: null,
+          totalMRR: { $sum: '$totalPrice' }
+        }
+      }
+    ]);
+    
+    const monthlyRecurringRevenue = mrrData.length > 0 ? mrrData[0].totalMRR : 0;
+
+    // Reactivations (subscriptions that were cancelled and then reactivated)
+    const reactivations = await Subscription.countDocuments({
+      status: 'active',
+      updatedAt: { $gte: start, $lte: end },
+      // Look for subscriptions that have a history of being cancelled
+      $or: [
+        { cancellationDate: { $exists: true } },
+        // This would be better with a status history, but for now we'll use this approximation
+        { 'pausePeriods.0': { $exists: true } }
+      ]
+    });
+
+    // Current Active Subscriptions (total count)
+    const activeSubscriptions = await Subscription.countDocuments({
+      status: 'active'
+    });
+
+    // Additional metrics for context
+    const totalSubscriptions = await Subscription.countDocuments();
+    const pausedSubscriptions = await Subscription.countDocuments({ status: 'paused' });
+    const cancelledSubscriptions = await Subscription.countDocuments({ status: 'cancelled' });
+
+    // Plan distribution in date range
+    const planDistribution = await Subscription.aggregate([
+      {
+        $match: {
+          createdAt: { $gte: start, $lte: end }
+        }
+      },
+      {
+        $group: {
+          _id: '$plan',
+          count: { $sum: 1 },
+          revenue: { $sum: '$totalPrice' }
+        }
+      },
+      {
+        $sort: { count: -1 }
+      }
+    ]);
+
+    // Daily subscription trends (last 7 days for chart)
+    const chartStart = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const dailyTrends = await Subscription.aggregate([
+      {
+        $match: {
+          createdAt: { $gte: chartStart, $lte: end }
+        }
+      },
+      {
+        $group: {
+          _id: {
+            year: { $year: '$createdAt' },
+            month: { $month: '$createdAt' },
+            day: { $dayOfMonth: '$createdAt' }
+          },
+          count: { $sum: 1 },
+          revenue: { $sum: '$totalPrice' }
+        }
+      },
+      {
+        $sort: { '_id.year': 1, '_id.month': 1, '_id.day': 1 }
+      }
+    ]);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        dateRange: {
+          startDate: start.toISOString(),
+          endDate: end.toISOString()
+        },
+        metrics: {
+          newSubscriptions,
+          monthlyRecurringRevenue,
+          reactivations,
+          activeSubscriptions
+        },
+        additionalMetrics: {
+          totalSubscriptions,
+          pausedSubscriptions,
+          cancelledSubscriptions,
+          planDistribution,
+          dailyTrends
+        },
+        lastUpdated: new Date().toISOString()
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching admin analytics:', error);
+    res.status(500).json({
+      error: 'Failed to fetch analytics data',
+      message: error.message
+    });
+  }
+});
+
+// GET /api/admin/analytics/revenue - Get detailed revenue analytics
+router.get('/analytics/revenue', authenticate, requireAdmin, async (req, res) => {
+  try {
+    const { startDate, endDate, groupBy = 'month' } = req.query;
+    
+    const start = startDate ? new Date(startDate) : new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
+    const end = endDate ? new Date(endDate) : new Date();
+    end.setHours(23, 59, 59, 999);
+
+    let groupByExpression;
+    switch (groupBy) {
+      case 'day':
+        groupByExpression = {
+          year: { $year: '$createdAt' },
+          month: { $month: '$createdAt' },
+          day: { $dayOfMonth: '$createdAt' }
+        };
+        break;
+      case 'week':
+        groupByExpression = {
+          year: { $year: '$createdAt' },
+          week: { $week: '$createdAt' }
+        };
+        break;
+      case 'month':
+      default:
+        groupByExpression = {
+          year: { $year: '$createdAt' },
+          month: { $month: '$createdAt' }
+        };
+        break;
+    }
+
+    const revenueData = await Subscription.aggregate([
+      {
+        $match: {
+          createdAt: { $gte: start, $lte: end }
+        }
+      },
+      {
+        $group: {
+          _id: groupByExpression,
+          totalRevenue: { $sum: '$totalPrice' },
+          subscriptionCount: { $sum: 1 },
+          activeRevenue: {
+            $sum: {
+              $cond: [{ $eq: ['$status', 'active'] }, '$totalPrice', 0]
+            }
+          },
+          activeCount: {
+            $sum: {
+              $cond: [{ $eq: ['$status', 'active'] }, 1, 0]
+            }
+          }
+        }
+      },
+      {
+        $sort: { '_id.year': 1, '_id.month': 1, '_id.day': 1, '_id.week': 1 }
+      }
+    ]);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        revenueData,
+        groupBy,
+        dateRange: {
+          startDate: start.toISOString(),
+          endDate: end.toISOString()
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching revenue analytics:', error);
+    res.status(500).json({
+      error: 'Failed to fetch revenue analytics',
+      message: error.message
+    });
+  }
+});
+
+// GET /api/admin/analytics/subscriptions - Get detailed subscription analytics
+router.get('/analytics/subscriptions', authenticate, requireAdmin, async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+    
+    const start = startDate ? new Date(startDate) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const end = endDate ? new Date(endDate) : new Date();
+    end.setHours(23, 59, 59, 999);
+
+    // Status distribution
+    const statusDistribution = await Subscription.aggregate([
+      {
+        $group: {
+          _id: '$status',
+          count: { $sum: 1 },
+          totalRevenue: { $sum: '$totalPrice' }
+        }
+      }
+    ]);
+
+    // Plan popularity
+    const planPopularity = await Subscription.aggregate([
+      {
+        $match: {
+          createdAt: { $gte: start, $lte: end }
+        }
+      },
+      {
+        $group: {
+          _id: '$plan',
+          count: { $sum: 1 },
+          revenue: { $sum: '$totalPrice' },
+          avgPrice: { $avg: '$totalPrice' }
+        }
+      },
+      {
+        $sort: { count: -1 }
+      }
+    ]);
+
+    // Churn analysis (cancellations in date range)
+    const churnData = await Subscription.aggregate([
+      {
+        $match: {
+          status: 'cancelled',
+          cancellationDate: { $gte: start, $lte: end }
+        }
+      },
+      {
+        $group: {
+          _id: {
+            year: { $year: '$cancellationDate' },
+            month: { $month: '$cancellationDate' }
+          },
+          churnCount: { $sum: 1 },
+          lostRevenue: { $sum: '$totalPrice' }
+        }
+      },
+      {
+        $sort: { '_id.year': 1, '_id.month': 1 }
+      }
+    ]);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        statusDistribution,
+        planPopularity,
+        churnData,
+        dateRange: {
+          startDate: start.toISOString(),
+          endDate: end.toISOString()
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching subscription analytics:', error);
+    res.status(500).json({
+      error: 'Failed to fetch subscription analytics',
+      message: error.message
+    });
+  }
+});
+
 module.exports = router;

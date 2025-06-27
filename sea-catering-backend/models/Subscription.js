@@ -66,6 +66,37 @@ const subscriptionSchema = new mongoose.Schema({
   
   endDate: {
     type: Date
+  },
+  
+  // Pause Information
+  pausePeriods: [{
+    startDate: {
+      type: Date,
+      required: true
+    },
+    endDate: {
+      type: Date,
+      required: true
+    },
+    reason: {
+      type: String,
+      trim: true,
+      maxlength: [500, 'Pause reason cannot exceed 500 characters']
+    },
+    createdAt: {
+      type: Date,
+      default: Date.now
+    }
+  }],
+  
+  // Cancellation Information
+  cancellationDate: {
+    type: Date
+  },
+  cancellationReason: {
+    type: String,
+    trim: true,
+    maxlength: [500, 'Cancellation reason cannot exceed 500 characters']
   }
 }, {
   timestamps: true // Adds createdAt and updatedAt automatically
@@ -135,6 +166,44 @@ subscriptionSchema.methods.getFormattedPrice = function() {
     currency: 'IDR',
     minimumFractionDigits: 2
   }).format(this.totalPrice);
+};
+
+// Instance method to check if currently paused
+subscriptionSchema.methods.isCurrentlyPaused = function() {
+  if (this.status !== 'paused') return false;
+  
+  const now = new Date();
+  return this.pausePeriods.some(period => 
+    period.startDate <= now && period.endDate >= now
+  );
+};
+
+// Instance method to get current pause period
+subscriptionSchema.methods.getCurrentPausePeriod = function() {
+  if (this.status !== 'paused') return null;
+  
+  const now = new Date();
+  return this.pausePeriods.find(period => 
+    period.startDate <= now && period.endDate >= now
+  );
+};
+
+// Instance method to get next billing date (considering pauses)
+subscriptionSchema.methods.getNextBillingDate = function() {
+  if (this.status === 'cancelled') return null;
+  
+  const now = new Date();
+  let nextBilling = new Date(now);
+  nextBilling.setMonth(nextBilling.getMonth() + 1); // Next month
+  
+  // If currently paused, add pause duration to next billing
+  const currentPause = this.getCurrentPausePeriod();
+  if (currentPause) {
+    const pauseDuration = currentPause.endDate - currentPause.startDate;
+    nextBilling = new Date(nextBilling.getTime() + pauseDuration);
+  }
+  
+  return nextBilling;
 };
 
 // Static method to get plan statistics

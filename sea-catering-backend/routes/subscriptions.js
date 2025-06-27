@@ -343,6 +343,255 @@ router.patch('/:id/status', authenticate, async (req, res) => {
   }
 });
 
+// PATCH /api/subscriptions/:id/pause - Pause subscription with date range
+router.patch('/:id/pause', authenticate, async (req, res) => {
+  try {
+    const { startDate, endDate, reason } = req.body;
+    
+    // Validation
+    if (!startDate || !endDate) {
+      return res.status(400).json({
+        error: 'Missing required fields',
+        message: 'Start date and end date are required for pausing a subscription'
+      });
+    }
+    
+    const pauseStart = new Date(startDate);
+    const pauseEnd = new Date(endDate);
+    const now = new Date();
+    
+    // Validate dates
+    if (pauseStart >= pauseEnd) {
+      return res.status(400).json({
+        error: 'Invalid date range',
+        message: 'End date must be after start date'
+      });
+    }
+    
+    if (pauseStart < now) {
+      return res.status(400).json({
+        error: 'Invalid start date',
+        message: 'Pause start date cannot be in the past'
+      });
+    }
+    
+    // Max pause duration of 3 months
+    const maxPauseDuration = 90 * 24 * 60 * 60 * 1000; // 90 days in milliseconds
+    if (pauseEnd - pauseStart > maxPauseDuration) {
+      return res.status(400).json({
+        error: 'Pause duration too long',
+        message: 'Maximum pause duration is 90 days'
+      });
+    }
+    
+    // Find subscription and check ownership
+    const subscription = await Subscription.findById(req.params.id);
+    
+    if (!subscription) {
+      return res.status(404).json({
+        error: 'Subscription not found',
+        message: `No subscription found with ID: ${req.params.id}`
+      });
+    }
+    
+    // Check ownership
+    if (req.user.role !== 'admin' && subscription.userId.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        error: 'Access forbidden',
+        message: 'You can only pause your own subscriptions'
+      });
+    }
+    
+    // Check if subscription can be paused
+    if (subscription.status === 'cancelled') {
+      return res.status(400).json({
+        error: 'Cannot pause subscription',
+        message: 'Cancelled subscriptions cannot be paused'
+      });
+    }
+    
+    // Check for overlapping pause periods
+    const hasOverlap = subscription.pausePeriods.some(period => 
+      (pauseStart >= period.startDate && pauseStart <= period.endDate) ||
+      (pauseEnd >= period.startDate && pauseEnd <= period.endDate) ||
+      (pauseStart <= period.startDate && pauseEnd >= period.endDate)
+    );
+    
+    if (hasOverlap) {
+      return res.status(400).json({
+        error: 'Overlapping pause periods',
+        message: 'This pause period overlaps with an existing pause period'
+      });
+    }
+    
+    // Add pause period
+    subscription.pausePeriods.push({
+      startDate: pauseStart,
+      endDate: pauseEnd,
+      reason: reason || ''
+    });
+    
+    // Update status to paused if pause starts immediately
+    if (pauseStart <= now) {
+      subscription.status = 'paused';
+    }
+    
+    await subscription.save();
+    
+    res.status(200).json({
+      success: true,
+      message: 'Subscription pause scheduled successfully',
+      data: subscription,
+      pausePeriod: {
+        startDate: pauseStart,
+        endDate: pauseEnd,
+        reason: reason || ''
+      }
+    });
+  } catch (error) {
+    console.error('Error pausing subscription:', error);
+    
+    if (error.kind === 'ObjectId') {
+      return res.status(400).json({
+        error: 'Invalid subscription ID',
+        message: 'The provided ID is not a valid format'
+      });
+    }
+    
+    res.status(500).json({
+      error: 'Failed to pause subscription',
+      message: error.message
+    });
+  }
+});
+
+// PATCH /api/subscriptions/:id/cancel - Cancel subscription
+router.patch('/:id/cancel', authenticate, async (req, res) => {
+  try {
+    const { reason } = req.body;
+    
+    // Find subscription and check ownership
+    const subscription = await Subscription.findById(req.params.id);
+    
+    if (!subscription) {
+      return res.status(404).json({
+        error: 'Subscription not found',
+        message: `No subscription found with ID: ${req.params.id}`
+      });
+    }
+    
+    // Check ownership
+    if (req.user.role !== 'admin' && subscription.userId.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        error: 'Access forbidden',
+        message: 'You can only cancel your own subscriptions'
+      });
+    }
+    
+    // Check if already cancelled
+    if (subscription.status === 'cancelled') {
+      return res.status(400).json({
+        error: 'Already cancelled',
+        message: 'This subscription is already cancelled'
+      });
+    }
+    
+    // Update subscription
+    subscription.status = 'cancelled';
+    subscription.cancellationDate = new Date();
+    subscription.cancellationReason = reason || '';
+    
+    await subscription.save();
+    
+    res.status(200).json({
+      success: true,
+      message: 'Subscription cancelled successfully',
+      data: subscription
+    });
+  } catch (error) {
+    console.error('Error cancelling subscription:', error);
+    
+    if (error.kind === 'ObjectId') {
+      return res.status(400).json({
+        error: 'Invalid subscription ID',
+        message: 'The provided ID is not a valid format'
+      });
+    }
+    
+    res.status(500).json({
+      error: 'Failed to cancel subscription',
+      message: error.message
+    });
+  }
+});
+
+// PATCH /api/subscriptions/:id/reactivate - Reactivate a paused subscription
+router.patch('/:id/reactivate', authenticate, async (req, res) => {
+  try {
+    // Find subscription and check ownership
+    const subscription = await Subscription.findById(req.params.id);
+    
+    if (!subscription) {
+      return res.status(404).json({
+        error: 'Subscription not found',
+        message: `No subscription found with ID: ${req.params.id}`
+      });
+    }
+    
+    // Check ownership
+    if (req.user.role !== 'admin' && subscription.userId.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        error: 'Access forbidden',
+        message: 'You can only reactivate your own subscriptions'
+      });
+    }
+    
+    // Check if can be reactivated
+    if (subscription.status === 'cancelled') {
+      return res.status(400).json({
+        error: 'Cannot reactivate',
+        message: 'Cancelled subscriptions cannot be reactivated'
+      });
+    }
+    
+    if (subscription.status === 'active') {
+      return res.status(400).json({
+        error: 'Already active',
+        message: 'This subscription is already active'
+      });
+    }
+    
+    // Remove any current pause periods
+    const now = new Date();
+    subscription.pausePeriods = subscription.pausePeriods.filter(period => 
+      period.endDate < now || period.startDate > now
+    );
+    
+    subscription.status = 'active';
+    await subscription.save();
+    
+    res.status(200).json({
+      success: true,
+      message: 'Subscription reactivated successfully',
+      data: subscription
+    });
+  } catch (error) {
+    console.error('Error reactivating subscription:', error);
+    
+    if (error.kind === 'ObjectId') {
+      return res.status(400).json({
+        error: 'Invalid subscription ID',
+        message: 'The provided ID is not a valid format'
+      });
+    }
+    
+    res.status(500).json({
+      error: 'Failed to reactivate subscription',
+      message: error.message
+    });
+  }
+});
+
 // DELETE /api/subscriptions/:id - Delete subscription (admin only or own subscription)
 router.delete('/:id', authenticate, async (req, res) => {
   try {

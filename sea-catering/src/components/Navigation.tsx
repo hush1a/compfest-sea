@@ -20,10 +20,26 @@ const Navigation = () => {
   ]
 
   const protectedItems = [
+    { id: 'dashboard', label: 'Dashboard', path: '/dashboard' },
     { id: 'subscription', label: 'Subscribe', path: '/subscription' }
   ]
 
-  const allItems = isAuthenticated ? [...publicItems, ...protectedItems] : publicItems
+  const adminItems = [
+    { id: 'admin', label: 'Admin Dashboard', path: '/admin' }
+  ]
+
+  const getNavigationItems = () => {
+    let items = [...publicItems];
+    if (isAuthenticated) {
+      items = [...items, ...protectedItems];
+      if (user?.role === 'admin') {
+        items = [...items, ...adminItems];
+      }
+    }
+    return items;
+  };
+
+  const allItems = getNavigationItems();
 
   const isActive = (path: string) => pathname === path
 
