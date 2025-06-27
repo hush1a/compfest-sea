@@ -51,6 +51,7 @@ app.use(rateLimiters.general);
 // CORS configuration
 const corsOptions = {
   origin: [
+    'http://localhost:3000', // Frontend development server
     process.env.FRONTEND_URL || 'http://localhost:3000',
     'http://localhost:3001',
     'http://localhost:3002'
