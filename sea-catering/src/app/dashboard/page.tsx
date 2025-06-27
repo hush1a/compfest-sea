@@ -36,7 +36,7 @@ interface CancelFormData {
 }
 
 export default function Dashboard() {
-  const { isAuthenticated, user, isLoading: authLoading } = useAuth();
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
   const router = useRouter();
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [loading, setLoading] = useState(true);
@@ -272,7 +272,7 @@ export default function Dashboard() {
                 </svg>
               </div>
               <h3 className="text-xl font-semibold text-gray-800 mb-2">No Subscriptions Found</h3>
-              <p className="text-gray-600 mb-6">You don't have any meal subscriptions yet.</p>
+              <p className="text-gray-600 mb-6">You don&apos;t have any meal subscriptions yet.</p>
               <a 
                 href="/subscription" 
                 className="inline-block bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors"

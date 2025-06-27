@@ -100,7 +100,7 @@ const TestimonialCarousel: React.FC<TestimonialCarouselProps> = ({ testimonials 
         {/* Testimonial Content */}
         <div className="text-center">
           <p className="text-lg md:text-xl text-gray-700 leading-relaxed mb-8 italic">
-            "{currentTestimonial.message}"
+            "            &quot;{currentTestimonial.message}&quot;"
           </p>
 
           {/* Customer Info */}

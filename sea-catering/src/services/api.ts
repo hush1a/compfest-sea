@@ -82,14 +82,13 @@ const apiFetch = async (endpoint: string, options: RequestInit = {}) => {
       const bodyData = JSON.parse(config.body);
       const sanitizedData = sanitizeInput(bodyData);
       config.body = JSON.stringify(sanitizedData);
-    } catch (e) {
+    } catch {
       // If not JSON, sanitize as string
       config.body = sanitizeInput(config.body);
     }
   }
 
   try {
-    console.log(`Making API request to: ${url}`);
     const response = await fetch(url, config);
     
     if (!response.ok) {
@@ -97,7 +96,6 @@ const apiFetch = async (endpoint: string, options: RequestInit = {}) => {
     }
     
     const data = await response.json();
-    console.log(`API response from ${url}:`, data);
     return data;
   } catch (error) {
     console.error(`API error for ${url}:`, error);

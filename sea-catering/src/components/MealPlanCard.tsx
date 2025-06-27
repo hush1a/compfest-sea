@@ -145,7 +145,7 @@ const MealPlanCard: React.FC<MealPlanCardProps> = ({ mealPlan }) => {
             )}
 
             <div>
-              <h3 className="text-xl font-bold text-gray-800 mb-3">What's Included</h3>
+              <h3 className="text-xl font-bold text-gray-800 mb-3">What&apos;s Included</h3>
               <div className="grid gap-2">
                 {mealPlan.features.map((feature, index) => (
                   <div key={index} className="flex items-center text-gray-700">

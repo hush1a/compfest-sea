@@ -189,15 +189,6 @@ const LoginPage: React.FC = () => {
             </span>
           </div>
 
-          {/* Demo Credentials */}
-          <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-            <h3 className="text-sm font-medium text-gray-700 mb-2">Demo Credentials:</h3>
-            <div className="text-xs text-gray-600 space-y-1">
-              <div><strong>User:</strong> test@example.com / SecurePassword123!</div>
-              <div><strong>Admin:</strong> admin@example.com / AdminPassword123!</div>
-            </div>
-          </div>
-
           {/* Registration Notice */}
           <div className="mt-4 p-4 bg-emerald-50 border border-emerald-200 rounded-lg">
             <div className="flex items-start">
