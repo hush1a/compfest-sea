@@ -3,6 +3,7 @@ require('dotenv').config();
 
 const User = require('./models/User');
 const Subscription = require('./models/Subscription');
+const MealPlan = require('./models/MealPlan');
 
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/sea-catering';
 
@@ -40,6 +41,105 @@ async function createTestData() {
     );
 
     console.log('Admin user created:', adminUser.email);
+
+    // Create meal plans
+    await MealPlan.deleteMany({}); // Clear existing meal plans
+    
+    const mealPlans = [
+      {
+        name: "Diet Plan",
+        price: 30000,
+        planType: "diet",
+        description: "Perfect for those seeking a balanced approach to healthy eating with portion-controlled, nutritious meals.",
+        features: [
+          "Calorie-controlled portions",
+          "Fresh, wholesome ingredients", 
+          "Balanced macronutrients",
+          "Weight management support",
+          "Nutritionist approved",
+          "Daily delivery available"
+        ],
+        detailedDescription: "Our Diet Plan is designed for individuals who want to maintain a healthy weight while enjoying delicious, nutritious meals.",
+        nutritionInfo: {
+          calories: "400-500",
+          protein: "25-30g",
+          carbs: "40-50g",
+          fat: "15-20g"
+        },
+        sampleMeals: [
+          "Breakfast: Greek yogurt with berries and granola",
+          "Lunch: Grilled chicken salad with quinoa",
+          "Dinner: Baked fish with steamed vegetables"
+        ],
+        dietaryInfo: ["Low Calorie", "Portion Controlled", "Balanced Nutrition"],
+        isActive: true
+      },
+      {
+        name: "Protein Plan",
+        price: 40000,
+        planType: "protein",
+        description: "High-protein meals designed for active individuals and fitness enthusiasts looking to optimize their performance.",
+        features: [
+          "High-protein content (30g+)",
+          "Lean meat and fish options",
+          "Post-workout meal support",
+          "Muscle building nutrition",
+          "Energy optimization",
+          "Performance focused recipes"
+        ],
+        detailedDescription: "Our Protein Plan is specifically designed for athletes, fitness enthusiasts, and anyone looking to increase their protein intake.",
+        nutritionInfo: {
+          calories: "500-600",
+          protein: "35-45g",
+          carbs: "30-40g",
+          fat: "20-25g"
+        },
+        sampleMeals: [
+          "Breakfast: Protein pancakes with Greek yogurt",
+          "Lunch: Grilled chicken breast with sweet potato",
+          "Dinner: Lean beef stir-fry with quinoa"
+        ],
+        dietaryInfo: ["High Protein", "Muscle Building", "Post-Workout Optimized"],
+        isActive: true
+      },
+      {
+        name: "Royal Plan",
+        price: 60000,
+        planType: "royal",
+        description: "Premium gourmet meals with the finest ingredients, perfect for those who want luxury dining at home.",
+        features: [
+          "Premium gourmet ingredients",
+          "Chef-crafted recipes",
+          "Luxurious presentation",
+          "Exotic and rare ingredients",
+          "Fine dining experience",
+          "Artisanal preparation"
+        ],
+        detailedDescription: "Experience fine dining at home with our Royal Plan. Featuring premium ingredients, chef-crafted recipes, and restaurant-quality presentation.",
+        nutritionInfo: {
+          calories: "600-700",
+          protein: "30-40g",
+          carbs: "50-60g",
+          fat: "25-35g"
+        },
+        sampleMeals: [
+          "Breakfast: Truffle scrambled eggs with smoked salmon",
+          "Lunch: Wagyu beef salad with arugula",
+          "Dinner: Pan-seared duck breast with seasonal vegetables"
+        ],
+        dietaryInfo: ["Gourmet", "Premium Ingredients", "Fine Dining Quality"],
+        isActive: true
+      }
+    ];
+
+    for (const planData of mealPlans) {
+      await MealPlan.findOneAndUpdate(
+        { planType: planData.planType },
+        planData,
+        { upsert: true, new: true }
+      );
+      console.log(`Created ${planData.name} meal plan`);
+    }
 
     // Clear existing subscriptions for test user
     await Subscription.deleteMany({ userId: testUser._id });
