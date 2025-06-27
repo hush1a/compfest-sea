@@ -64,6 +64,8 @@ const createRateLimiter = (windowMs, max, message) => {
     },
     standardHeaders: true,
     legacyHeaders: false,
+    // Trust proxy headers for platforms like Railway, Heroku, etc.
+    trustProxy: true,
     skip: (req) => {
       // Skip rate limiting for health checks
       return req.path === '/health';

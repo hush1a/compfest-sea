@@ -28,6 +28,10 @@ const testimonialRoutes = require('./routes/testimonials');
 // Initialize Express app
 const app = express();
 
+// Trust proxy headers for deployment platforms like Railway, Heroku, etc.
+// This is required for rate limiting to work correctly behind proxies
+app.set('trust proxy', 1);
+
 // Connect to MongoDB
 connectDB();
 
