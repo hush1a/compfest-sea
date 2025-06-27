@@ -78,7 +78,7 @@ app.use(csrfProtection);
 app.get('/health', (req, res) => {
   res.status(200).json({
     status: 'OK',
-    message: 'SEA Catering API is running',
+    message: 'SEA Catering API is running - v2.0.1',
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'development'
   });
