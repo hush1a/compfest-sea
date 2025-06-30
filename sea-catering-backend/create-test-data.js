@@ -12,13 +12,12 @@ async function createTestData() {
     await mongoose.connect(MONGODB_URI);
     console.log('Connected to MongoDB');
 
-    // Create test user
     const testUser = await User.findOneAndUpdate(
       { email: 'test@example.com' },
       {
         fullName: 'John Doe',
         email: 'test@example.com',
-        password: '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // password
+        password: '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi',
         role: 'user',
         isActive: true
       },
@@ -27,13 +26,12 @@ async function createTestData() {
 
     console.log('Test user created:', testUser.email);
 
-    // Create admin user
     const adminUser = await User.findOneAndUpdate(
       { email: 'admin@seacatering.com' },
       {
         fullName: 'Admin User',
         email: 'admin@seacatering.com',
-        password: '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // password
+        password: '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi',
         role: 'admin',
         isActive: true
       },
@@ -42,8 +40,7 @@ async function createTestData() {
 
     console.log('Admin user created:', adminUser.email);
 
-    // Create meal plans
-    await MealPlan.deleteMany({}); // Clear existing meal plans
+    await MealPlan.deleteMany({});
     
     const mealPlans = [
       {
@@ -141,10 +138,8 @@ async function createTestData() {
       console.log(`Created ${planData.name} meal plan`);
     }
 
-    // Clear existing subscriptions for test user
     await Subscription.deleteMany({ userId: testUser._id });
 
-    // Create additional test users for more realistic data
     const testUsers = [];
     for (let i = 0; i < 5; i++) {
       const user = await User.findOneAndUpdate(

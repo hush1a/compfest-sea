@@ -3,8 +3,26 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Modal from './Modal'
-import { MealPlan } from '../data/mealPlans'
 import { useAuth } from '@/contexts/AuthContext'
+
+interface MealPlan {
+  id: string | number
+  name: string
+  price: string
+  period: string
+  description: string
+  image: string
+  features: string[]
+  detailedDescription: string
+  nutritionInfo: {
+    calories: string
+    protein: string
+    carbs: string
+    fat: string
+  }
+  sampleMeals: string[]
+  dietaryInfo: string[]
+}
 
 interface MealPlanCardProps {
   mealPlan: MealPlan

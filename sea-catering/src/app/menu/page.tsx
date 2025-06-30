@@ -6,11 +6,29 @@ import MealPlanCard from '../../components/MealPlanCard'
 import PageHeader from '../../components/PageHeader'
 import Navigation from '../../components/Navigation'
 import Footer from '../../components/Footer'
-import { mealPlansData } from '../../data/mealPlans'
 import { mealPlansApi } from '../../services/api'
 
+interface MealPlan {
+  id: string
+  name: string
+  price: string
+  period: string
+  description: string
+  image: string
+  features: string[]
+  detailedDescription: string
+  nutritionInfo: {
+    calories: string
+    protein: string
+    carbs: string
+    fat: string
+  }
+  sampleMeals: string[]
+  dietaryInfo: string[]
+}
+
 export default function MenuPage() {
-  const [mealPlans, setMealPlans] = useState(mealPlansData) // Fallback to static data
+  const [mealPlans, setMealPlans] = useState<MealPlan[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 

@@ -6,10 +6,9 @@ const { authenticate, optionalAuthenticate } = require('../middleware/auth');
 
 const router = express.Router();
 
-// Rate limiting for auth endpoints
 const authLimiter = require('express-rate-limit')({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // limit each IP to 5 requests per windowMs for auth endpoints
+  windowMs: 15 * 60 * 1000,
+  max: 5,
   message: {
     error: 'Too many authentication attempts',
     message: 'Please try again later'
@@ -18,7 +17,6 @@ const authLimiter = require('express-rate-limit')({
   legacyHeaders: false,
 });
 
-// Validation middleware for user registration
 const validateRegistration = [
   body('fullName')
     .trim()
