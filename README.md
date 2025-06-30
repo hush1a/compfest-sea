@@ -2,6 +2,14 @@
 
 SEA Catering is a modern, full-stack meal subscription platform that connects customers with premium catering services. Built with Next.js 15 and Node.js, it offers a secure, scalable solution for meal plan subscriptions with comprehensive user and admin dashboards.
 
+## 🌐 Live Demo
+
+**🚀 [View Live Application](https://compfest-sea-pi.vercel.app/)**
+
+- **Frontend**: https://compfest-sea-pi.vercel.app/
+- **Backend API**: https://compfest-sea-production.up.railway.app/
+- **Database**: MongoDB Atlas (Cloud)
+
 ## ✨ Features
 
 ### 🔐 User Features
@@ -73,6 +81,23 @@ SEA Catering is a modern, full-stack meal subscription platform that connects cu
 
 ## 🚀 Quick Start
 
+### 🌐 Try the Live Demo (Recommended)
+
+**Instant Access - No Setup Required!**
+
+1. **Visit the Live Application**: https://compfest-sea-pi.vercel.app/
+2. **Browse Public Pages**: Explore meal plans, testimonials, and contact page
+3. **Test User Account**:
+   - Email: `test@example.com`
+   - Password: `password`
+   - Access: User dashboard and subscription management
+4. **Test Admin Account**:
+   - Email: `admin@seacatering.com`
+   - Password: `password`
+   - Access: Admin dashboard with business analytics
+
+### 💻 Local Development Setup
+
 ### Prerequisites
 - Node.js (v18 or higher)
 - MongoDB (local installation or MongoDB Atlas)
@@ -100,26 +125,37 @@ SEA Catering is a modern, full-stack meal subscription platform that connects cu
 
 4. **Environment Configuration**
    
-   Create `.env` file in `sea-catering-backend/`:
-   ```env
-   # Database
-   MONGODB_URI=mongodb://localhost:27017/sea-catering
-   
-   # Server
-   PORT=5000
-   NODE_ENV=development
-   
-   # JWT Secret (Generate a strong secret for production!)
-   JWT_SECRET=your-super-secret-jwt-key-here
-   
-   # CORS Settings
-   FRONTEND_URL=http://localhost:3002
-   ```
+### Local Development Setup
 
-   Create `.env.local` file in `sea-catering/`:
-   ```env
-   NEXT_PUBLIC_API_URL=http://localhost:5000
-   ```
+For local development, you can still run the project locally:
+
+### Environment Variables (Local Development)
+
+Create `.env` file in `sea-catering-backend/`:
+```env
+# Database
+MONGODB_URI=mongodb://localhost:27017/sea-catering
+# Or use: mongodb+srv://[credentials]@sea-catering.xnh3llg.mongodb.net/
+
+# Server
+PORT=5000
+NODE_ENV=development
+
+# JWT Secret (Generate a strong secret for production!)
+JWT_SECRET=your-super-secret-jwt-key-here
+
+# CORS Settings
+FRONTEND_URL=http://localhost:3000
+```
+
+Create `.env.local` file in `sea-catering/`:
+```env
+# For local backend
+NEXT_PUBLIC_API_URL=http://localhost:5000
+
+# For production backend
+# NEXT_PUBLIC_API_URL=https://compfest-sea-production.up.railway.app
+```
 
 5. **Start MongoDB**
    ```bash
@@ -144,8 +180,9 @@ SEA Catering is a modern, full-stack meal subscription platform that connects cu
    ```
 
 7. **Access the Application**
-   - Frontend: http://localhost:3002
+   - Frontend: http://localhost:3000
    - Backend API: http://localhost:5000
+   - Live Demo: https://compfest-sea-pi.vercel.app/
 
 ## 📊 Sample Data & Testing
 
@@ -158,41 +195,52 @@ node create-test-data.js
 ```
 
 This creates:
-- **Sample Users**: test1@example.com to test5@example.com (password: password123)
-- **Admin Account**: admin@seacatering.com (password: admin123)
-- **Sample Subscriptions**: Various meal plans with different statuses
-- **Realistic Data**: Subscription dates spanning recent months for analytics
+- **Sample Users**: test@example.com, user1@example.com to user5@example.com (password: password)
+- **Admin Account**: admin@seacatering.com (password: password)
+- **Meal Plans**: Diet Plan (Rp 30,000), Protein Plan (Rp 40,000), Royal Plan (Rp 60,000)
+- **Sample Subscriptions**: Various meal plans with different statuses (active, paused, cancelled)
+- **Realistic Data**: Subscription dates spanning recent months for analytics testing
 
-### Test Accounts
+### Live Test Accounts
+
+**🔑 Ready-to-use accounts on the live demo:**
 
 **Regular User Account:**
-- Email: test1@example.com
-- Password: password123
+- Email: test@example.com
+- Password: password
 - Access: User dashboard, subscription management
 
 **Admin Account:**
 - Email: admin@seacatering.com
-- Password: admin123
+- Password: password
 - Access: Admin dashboard, business analytics
 
 ### Testing Guide
 
-1. **User Dashboard Testing**:
-   - Login with test1@example.com
+1. **🌐 Live Demo Testing**:
+   - Visit: https://compfest-sea-pi.vercel.app/
+   - Browse meal plans without login
+   - Test user registration/login
+   - Access user dashboard with test account
+
+2. **User Dashboard Testing**:
+   - Login with test@example.com / password
    - Navigate to Dashboard
    - Test subscription pause/cancel/reactivate
    - Verify subscription history
 
-2. **Admin Dashboard Testing**:
-   - Login with admin@seacatering.com
+3. **Admin Dashboard Testing**:
+   - Login with admin@seacatering.com / password
    - Navigate to Admin Dashboard
    - Test date range filtering
    - Verify analytics data display
+   - Check MRR calculations
 
-3. **Security Testing**:
-   - Try accessing admin routes as regular user
+4. **Security Testing**:
+   - Try accessing admin routes as regular user (should redirect)
    - Test rate limiting by rapid requests
    - Verify CSRF protection on forms
+   - Test unauthorized API access
 
 ## 📁 Project Structure
 
@@ -229,6 +277,10 @@ compfest-sea/
 - `POST /api/auth/login` - User login
 - `POST /api/auth/logout` - User logout
 - `GET /api/auth/me` - Get current user
+
+### Meal Plans
+- `GET /api/meal-plans` - Get all available meal plans
+- `GET /api/meal-plans/:id` - Get specific meal plan details
 
 ### Subscriptions
 - `GET /api/subscriptions` - Get user subscriptions
@@ -275,19 +327,44 @@ compfest-sea/
 
 ## 🌐 Production Deployment
 
-### Environment Variables
-Set these in production:
+### 🚀 Current Deployment Status
+- **✅ Frontend**: Deployed on Vercel
+- **✅ Backend**: Deployed on Railway
+- **✅ Database**: MongoDB Atlas (Cloud)
+- **✅ SSL**: HTTPS enabled on all services
 
-```env
-# Backend
-MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/sea-catering
-NODE_ENV=production
-JWT_SECRET=your-super-secure-production-jwt-secret
-FRONTEND_URL=https://your-domain.com
+### Live URLs
+- **Frontend**: https://compfest-sea-pi.vercel.app/
+- **Backend API**: https://compfest-sea-production.up.railway.app/
+- **Database**: MongoDB Atlas cluster (secure connection)
 
-# Frontend
-NEXT_PUBLIC_API_URL=https://your-api-domain.com
-```
+### Deployment Platforms
+
+**Frontend (Vercel):**
+- Framework: Next.js 15
+- Build Command: `npm run build`
+- Environment Variables:
+  ```env
+  NEXT_PUBLIC_API_URL=https://compfest-sea-production.up.railway.app
+  ```
+
+**Backend (Railway):**
+- Runtime: Node.js
+- Start Command: `npm start`
+- Environment Variables:
+  ```env
+  MONGODB_URI=mongodb+srv://[credentials]@sea-catering.xnh3llg.mongodb.net/
+  NODE_ENV=production
+  JWT_SECRET=[secure-production-secret]
+  FRONTEND_URL=https://compfest-sea-pi.vercel.app/
+  PORT=5000
+  ```
+
+**Database (MongoDB Atlas):**
+- Cluster: Free tier M0
+- Region: Asia-Southeast (Singapore)
+- Network Access: Configured for Railway
+- Database Authentication: Enabled
 
 ### Build Commands
 
@@ -307,13 +384,17 @@ npm start
 ```
 
 ### Deployment Checklist
-- [ ] Update MONGODB_URI for production database
-- [ ] Generate strong JWT_SECRET
-- [ ] Configure CORS for production domain
-- [ ] Set up SSL certificates
-- [ ] Configure reverse proxy (nginx)
-- [ ] Set up monitoring and logging
-- [ ] Enable database backups
+- [x] ✅ Production database (MongoDB Atlas)
+- [x] ✅ Backend deployment (Railway)
+- [x] ✅ Frontend deployment (Vercel)
+- [x] ✅ Environment variables configured
+- [x] ✅ CORS settings for production
+- [x] ✅ SSL certificates enabled
+- [x] ✅ Test data populated
+- [x] ✅ Rate limiting configured
+- [x] ✅ Security headers enabled
+- [x] ✅ Authentication working
+- [x] ✅ Admin dashboard functional
 
 ## 🔄 Future Enhancements
 
