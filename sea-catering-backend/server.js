@@ -37,12 +37,18 @@ app.use(rateLimiters.general);
 const corsOptions = {
   origin: [
     'http://localhost:3000',
-    process.env.FRONTEND_URL || 'http://localhost:3000',
     'http://localhost:3001',
-    'http://localhost:3002'
+    'http://localhost:3002',
+    process.env.FRONTEND_URL || 'http://localhost:3000',
+    // Add Vercel domain patterns
+    /^https:\/\/.*\.vercel\.app$/,
+    // Add any additional frontend URLs
+    'https://compfest-sea.vercel.app',
+    'https://compfest-sea-git-main.vercel.app',
+    'https://compfest-sea-hush1a.vercel.app'
   ],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token'],
   credentials: true
 };
 app.use(cors(corsOptions));
