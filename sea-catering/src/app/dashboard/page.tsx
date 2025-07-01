@@ -2,6 +2,28 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  Calendar, 
+  Package, 
+  TrendingUp, 
+  Clock, 
+  Play, 
+  Pause, 
+  X, 
+  MoreVertical, 
+  RefreshCw, 
+  AlertCircle,
+  CheckCircle,
+  PauseCircle,
+  XCircle,
+  DollarSign,
+  Utensils,
+  MapPin,
+  Settings,
+  Bell,
+  Heart
+} from 'lucide-react';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import { subscriptionApi } from '@/services/api';
@@ -35,14 +57,32 @@ interface CancelFormData {
   reason: string;
 }
 
+const StatusBadge = ({ status }: { status: string }) => {
+  const config = {
+    active: { icon: CheckCircle, bg: 'bg-green-100', text: 'text-green-700', label: 'Active' },
+    paused: { icon: PauseCircle, bg: 'bg-yellow-100', text: 'text-yellow-700', label: 'Paused' },
+    cancelled: { icon: XCircle, bg: 'bg-red-100', text: 'text-red-700', label: 'Cancelled' }
+  }[status] || { icon: AlertCircle, bg: 'bg-gray-100', text: 'text-gray-700', label: 'Unknown' };
+
+  const Icon = config.icon;
+
+  return (
+    <span className={`inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-full text-sm font-medium ${config.bg} ${config.text}`}>
+      <Icon size={14} />
+      <span>{config.label}</span>
+    </span>
+  );
+};
+
 export default function Dashboard() {
-  const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const { isAuthenticated, isLoading: authLoading, user } = useAuth();
   const router = useRouter();
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedSubscription, setSelectedSubscription] = useState<string | null>(null);
   const [actionType, setActionType] = useState<'pause' | 'cancel' | null>(null);
+  const [showActionModal, setShowActionModal] = useState(false);
   const [pauseForm, setPauseForm] = useState<PauseFormData>({
     startDate: '',
     endDate: '',
@@ -51,9 +91,7 @@ export default function Dashboard() {
   const [cancelForm, setCancelForm] = useState<CancelFormData>({
     reason: ''
   });
-  const [actionLoading, setActionLoading] = useState(false);
 
-  // Redirect to login if not authenticated
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
       router.push('/login');
@@ -69,459 +107,436 @@ export default function Dashboard() {
   const fetchSubscriptions = async () => {
     try {
       setLoading(true);
+      setError(null);
       const response = await subscriptionApi.getUserSubscriptions();
-      setSubscriptions(response.data || []);
+      
+      if (response.success && response.data) {
+        setSubscriptions(response.data);
+      } else {
+        setError('Failed to fetch subscriptions');
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch subscriptions');
+      console.error('Error fetching subscriptions:', err);
+      setError('An error occurred while fetching your subscriptions');
     } finally {
       setLoading(false);
     }
   };
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
-      minimumFractionDigits: 0
-    }).format(price);
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('id-ID', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-  };
-
-  const capitalizeFirst = (str: string) => {
-    return str.charAt(0).toUpperCase() + str.slice(1);
-  };
-
-  const getPlanDisplayName = (plan: string) => {
-    const planNames = {
-      diet: 'Diet Plan',
-      protein: 'Protein Plan',
-      royal: 'Royal Plan'
-    };
-    return planNames[plan as keyof typeof planNames] || plan;
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active': return 'text-green-600 bg-green-100';
-      case 'paused': return 'text-yellow-600 bg-yellow-100';
-      case 'cancelled': return 'text-red-600 bg-red-100';
-      default: return 'text-gray-600 bg-gray-100';
+  const handleAction = (subscriptionId: string, action: 'pause' | 'cancel' | 'reactivate') => {
+    setSelectedSubscription(subscriptionId);
+    setActionType(action);
+    if (action === 'reactivate') {
+      handleReactivate(subscriptionId);
+    } else {
+      setShowActionModal(true);
     }
   };
 
-  const getCurrentPausePeriod = (subscription: Subscription) => {
-    if (!subscription.pausePeriods || subscription.status !== 'paused') return null;
-    
-    const now = new Date();
-    return subscription.pausePeriods.find(period => 
-      new Date(period.startDate) <= now && new Date(period.endDate) >= now
-    );
-  };
-
-  const handlePauseSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handlePause = async () => {
     if (!selectedSubscription) return;
 
     try {
-      setActionLoading(true);
-      await subscriptionApi.pause(
-        selectedSubscription,
-        pauseForm.startDate,
-        pauseForm.endDate,
-        pauseForm.reason
-      );
-      
+      await subscriptionApi.pause(selectedSubscription, pauseForm.startDate, pauseForm.endDate, pauseForm.reason);
       await fetchSubscriptions();
-      closeModal();
+      setShowActionModal(false);
+      resetForms();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to pause subscription');
-    } finally {
-      setActionLoading(false);
+      console.error('Error pausing subscription:', err);
+      setError('Failed to pause subscription');
     }
   };
 
-  const handleCancelSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleCancel = async () => {
     if (!selectedSubscription) return;
 
     try {
-      setActionLoading(true);
       await subscriptionApi.cancel(selectedSubscription, cancelForm.reason);
-      
       await fetchSubscriptions();
-      closeModal();
+      setShowActionModal(false);
+      resetForms();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to cancel subscription');
-    } finally {
-      setActionLoading(false);
+      console.error('Error cancelling subscription:', err);
+      setError('Failed to cancel subscription');
     }
   };
 
   const handleReactivate = async (subscriptionId: string) => {
     try {
-      setActionLoading(true);
       await subscriptionApi.reactivate(subscriptionId);
       await fetchSubscriptions();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to reactivate subscription');
-    } finally {
-      setActionLoading(false);
+      console.error('Error reactivating subscription:', err);
+      setError('Failed to reactivate subscription');
     }
   };
 
-  const openModal = (subscriptionId: string, action: 'pause' | 'cancel') => {
-    setSelectedSubscription(subscriptionId);
-    setActionType(action);
-    
-    // Set default dates for pause
-    if (action === 'pause') {
-      const tomorrow = new Date();
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      const nextWeek = new Date();
-      nextWeek.setDate(nextWeek.getDate() + 7);
-      
-      setPauseForm({
-        startDate: tomorrow.toISOString().split('T')[0],
-        endDate: nextWeek.toISOString().split('T')[0],
-        reason: ''
-      });
-    }
-  };
-
-  const closeModal = () => {
-    setSelectedSubscription(null);
-    setActionType(null);
+  const resetForms = () => {
     setPauseForm({ startDate: '', endDate: '', reason: '' });
     setCancelForm({ reason: '' });
-    setError(null);
+    setSelectedSubscription(null);
+    setActionType(null);
   };
 
-  if (authLoading || (!isAuthenticated && !authLoading)) {
-    return (
-      <div className="min-h-screen flex flex-col">
-        <Navigation />
-        <main className="flex-grow">
-          <div className="container mx-auto px-6 py-8">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
-              <p className="mt-4 text-gray-600">
-                {authLoading ? 'Loading...' : 'Redirecting to login...'}
-              </p>
-            </div>
-          </div>
-        </main>
-        <Footer />
-      </div>
-    );
-  }
+  const getDashboardStats = () => {
+    const activeCount = subscriptions.filter(sub => sub.status === 'active').length;
+    const totalSpent = subscriptions.reduce((sum, sub) => sum + sub.totalPrice, 0);
+    const nextDelivery = subscriptions.find(sub => sub.status === 'active')?.deliveryDays[0] || 'N/A';
 
-  if (loading) {
+    return { activeCount, totalSpent, nextDelivery };
+  };
+
+  const stats = getDashboardStats();
+
+  if (authLoading || loading) {
     return (
-      <div className="min-h-screen flex flex-col">
+      <>
         <Navigation />
-        <main className="flex-grow">
-          <div className="container mx-auto px-6 py-8">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
-              <p className="mt-4 text-gray-600">Loading your subscriptions...</p>
+        <main className="min-h-screen bg-gray-50 pt-20">
+          <div className="container mx-auto px-4 lg:px-6 py-8">
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {[...Array(3)].map((_, index) => (
+                  <div key={index} className="bg-white rounded-2xl p-6 shadow-sm">
+                    <div className="h-8 bg-gray-200 rounded skeleton mb-2"></div>
+                    <div className="h-12 bg-gray-200 rounded skeleton"></div>
+                  </div>
+                ))}
+              </div>
+              <div className="bg-white rounded-2xl p-6 shadow-sm">
+                <div className="h-8 bg-gray-200 rounded skeleton mb-4"></div>
+                <div className="space-y-4">
+                  {[...Array(2)].map((_, index) => (
+                    <div key={index} className="h-32 bg-gray-200 rounded skeleton"></div>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         </main>
         <Footer />
-      </div>
+      </>
     );
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
+    <>
       <Navigation />
       
-      <main className="flex-grow">
-        <div className="bg-green-600 text-white py-16">
-          <div className="container mx-auto px-6 text-center">
-            <h1 className="text-4xl font-bold mb-4">My Dashboard</h1>
-            <p className="text-xl opacity-90">Manage your meal subscriptions</p>
+      <main className="min-h-screen bg-gray-50 pt-20">
+        {/* Header Section */}
+        <section className="bg-gradient-to-br from-green-500 via-green-600 to-green-700 text-white py-12">
+          <div className="container mx-auto px-4 lg:px-6">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              className="flex flex-col md:flex-row md:items-center md:justify-between"
+            >
+              <div>
+                <h1 className="text-3xl md:text-4xl font-bold mb-2">
+                  Welcome back, {user?.email?.split('@')[0] || 'User'}! 👋
+                </h1>
+                <p className="text-green-100 text-lg">
+                  Manage your meal subscriptions and track your healthy journey
+                </p>
+              </div>
+              <div className="mt-6 md:mt-0 flex space-x-3">
+                <button
+                  onClick={() => router.push('/subscription')}
+                  className="bg-white hover:bg-gray-100 text-green-600 font-semibold py-3 px-6 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl flex items-center space-x-2"
+                >
+                  <Package size={20} />
+                  <span>New Subscription</span>
+                </button>
+                <button
+                  onClick={fetchSubscriptions}
+                  className="bg-green-700 hover:bg-green-800 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-200 border-2 border-green-400"
+                >
+                  <RefreshCw size={20} />
+                </button>
+              </div>
+            </motion.div>
           </div>
+        </section>
+
+        <div className="container mx-auto px-4 lg:px-6 py-8">
+          {/* Stats Cards */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+            className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8"
+          >
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600 mb-1">Active Subscriptions</p>
+                  <p className="text-3xl font-bold text-gray-900">{stats.activeCount}</p>
+                </div>
+                <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                  <CheckCircle size={24} className="text-green-600" />
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600 mb-1">Total Spent</p>
+                  <p className="text-3xl font-bold text-gray-900">
+                    Rp {stats.totalSpent.toLocaleString('id-ID')}
+                  </p>
+                </div>
+                <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                  <DollarSign size={24} className="text-blue-600" />
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600 mb-1">Next Delivery</p>
+                  <p className="text-3xl font-bold text-gray-900 capitalize">{stats.nextDelivery}</p>
+                </div>
+                <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center">
+                  <Calendar size={24} className="text-orange-600" />
+                </div>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Subscriptions Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden"
+          >
+            <div className="p-6 border-b border-gray-100">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-bold text-gray-900">Your Subscriptions</h2>
+                <div className="flex items-center space-x-2 text-sm text-gray-600">
+                  <Utensils size={16} />
+                  <span>{subscriptions.length} subscription{subscriptions.length !== 1 ? 's' : ''}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-6">
+              {error && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="bg-red-50 border border-red-200 rounded-xl p-4 mb-6 flex items-center space-x-3"
+                >
+                  <AlertCircle size={20} className="text-red-600 flex-shrink-0" />
+                  <p className="text-red-700">{error}</p>
+                  <button
+                    onClick={() => setError(null)}
+                    className="ml-auto text-red-600 hover:text-red-700"
+                  >
+                    <X size={16} />
+                  </button>
+                </motion.div>
+              )}
+
+              {subscriptions.length === 0 ? (
+                <div className="text-center py-12">
+                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Package size={32} className="text-gray-400" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">No Subscriptions Yet</h3>
+                  <p className="text-gray-600 mb-6">Start your healthy journey by subscribing to one of our meal plans.</p>
+                  <button
+                    onClick={() => router.push('/menu')}
+                    className="bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl"
+                  >
+                    Browse Meal Plans
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {subscriptions.map((subscription, index) => (
+                    <motion.div
+                      key={subscription._id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.4, delay: index * 0.1 }}
+                      className="border border-gray-200 rounded-xl p-6 hover:shadow-md transition-all duration-200"
+                    >
+                      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-3 mb-3">
+                            <h3 className="text-xl font-semibold text-gray-900">{subscription.plan}</h3>
+                            <StatusBadge status={subscription.status} />
+                          </div>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                            <div className="flex items-center space-x-2 text-gray-600">
+                              <Utensils size={16} />
+                              <span>{subscription.mealTypes.join(', ')}</span>
+                            </div>
+                            <div className="flex items-center space-x-2 text-gray-600">
+                              <Calendar size={16} />
+                              <span>{subscription.deliveryDays.join(', ')}</span>
+                            </div>
+                            <div className="flex items-center space-x-2 text-gray-600">
+                              <DollarSign size={16} />
+                              <span>Rp {subscription.totalPrice.toLocaleString('id-ID')}</span>
+                            </div>
+                          </div>
+
+                          <div className="mt-3 text-xs text-gray-500">
+                            Started on {new Date(subscription.startDate).toLocaleDateString()}
+                          </div>
+                        </div>
+
+                        <div className="flex items-center space-x-2">
+                          {subscription.status === 'active' && (
+                            <>
+                              <button
+                                onClick={() => handleAction(subscription._id, 'pause')}
+                                className="bg-yellow-100 hover:bg-yellow-200 text-yellow-700 font-medium py-2 px-4 rounded-lg transition-all duration-200 flex items-center space-x-2"
+                              >
+                                <Pause size={16} />
+                                <span>Pause</span>
+                              </button>
+                              <button
+                                onClick={() => handleAction(subscription._id, 'cancel')}
+                                className="bg-red-100 hover:bg-red-200 text-red-700 font-medium py-2 px-4 rounded-lg transition-all duration-200 flex items-center space-x-2"
+                              >
+                                <X size={16} />
+                                <span>Cancel</span>
+                              </button>
+                            </>
+                          )}
+                          
+                          {subscription.status === 'paused' && (
+                            <button
+                              onClick={() => handleAction(subscription._id, 'reactivate')}
+                              className="bg-green-100 hover:bg-green-200 text-green-700 font-medium py-2 px-4 rounded-lg transition-all duration-200 flex items-center space-x-2"
+                            >
+                              <Play size={16} />
+                              <span>Reactivate</span>
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </motion.div>
         </div>
 
-        <div className="container mx-auto px-6 py-8 -mt-8">
-          {error && (
-            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
-              {error}
-              <button 
-                onClick={() => setError(null)}
-                className="float-right ml-4 text-red-600 hover:text-red-800"
+        {/* Action Modal */}
+        <AnimatePresence>
+          {showActionModal && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+              onClick={() => setShowActionModal(false)}
+            >
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl"
+                onClick={(e) => e.stopPropagation()}
               >
-                ×
-              </button>
-            </div>
-          )}
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-xl font-semibold text-gray-900">
+                    {actionType === 'pause' ? 'Pause Subscription' : 'Cancel Subscription'}
+                  </h3>
+                  <button
+                    onClick={() => setShowActionModal(false)}
+                    className="text-gray-400 hover:text-gray-600 transition-colors duration-200"
+                  >
+                    <X size={20} />
+                  </button>
+                </div>
 
-          {subscriptions.length === 0 ? (
-            <div className="bg-white rounded-lg shadow-md p-8 text-center">
-              <div className="text-gray-400 mb-4">
-                <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                </svg>
-              </div>
-              <h3 className="text-xl font-semibold text-gray-800 mb-2">No Subscriptions Found</h3>
-              <p className="text-gray-600 mb-6">You don&apos;t have any meal subscriptions yet.</p>
-              <a 
-                href="/subscription" 
-                className="inline-block bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors"
-              >
-                Subscribe Now
-              </a>
-            </div>
-          ) : (
-            <div className="grid gap-6">
-              {subscriptions.map((subscription) => {
-                const currentPause = getCurrentPausePeriod(subscription);
-                
-                return (
-                  <div key={subscription._id} className="bg-white rounded-lg shadow-md overflow-hidden">
-                    <div className="p-6">
-                      <div className="flex justify-between items-start mb-4">
-                        <div>
-                          <h3 className="text-xl font-semibold text-gray-800 mb-2">
-                            {getPlanDisplayName(subscription.plan)}
-                          </h3>
-                          <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(subscription.status)}`}>
-                            {capitalizeFirst(subscription.status)}
-                          </span>
-                        </div>
-                        <div className="text-right">
-                          <div className="text-2xl font-bold text-green-600">
-                            {formatPrice(subscription.totalPrice)}
-                          </div>
-                          <div className="text-sm text-gray-600">per month</div>
-                        </div>
-                      </div>
-
-                      <div className="grid md:grid-cols-2 gap-4 mb-6">
-                        <div>
-                          <h4 className="font-semibold text-gray-700 mb-2">Meal Types</h4>
-                          <div className="flex flex-wrap gap-2">
-                            {subscription.mealTypes.map((meal) => (
-                              <span key={meal} className="px-2 py-1 bg-green-100 text-green-700 rounded text-sm">
-                                {capitalizeFirst(meal)}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                        <div>
-                          <h4 className="font-semibold text-gray-700 mb-2">Delivery Days</h4>
-                          <div className="flex flex-wrap gap-2">
-                            {subscription.deliveryDays.map((day) => (
-                              <span key={day} className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-sm">
-                                {capitalizeFirst(day)}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="grid md:grid-cols-2 gap-4 text-sm text-gray-600 mb-6">
-                        <div>
-                          <span className="font-medium">Started:</span> {formatDate(subscription.startDate)}
-                        </div>
-                        <div>
-                          <span className="font-medium">Subscribed:</span> {formatDate(subscription.createdAt)}
-                        </div>
-                      </div>
-
-                      {currentPause && (
-                        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
-                          <h4 className="font-semibold text-yellow-800 mb-2">Currently Paused</h4>
-                          <p className="text-yellow-700 text-sm">
-                            From {formatDate(currentPause.startDate)} to {formatDate(currentPause.endDate)}
-                          </p>
-                          {currentPause.reason && (
-                            <p className="text-yellow-700 text-sm mt-1">
-                              Reason: {currentPause.reason}
-                            </p>
-                          )}
-                        </div>
-                      )}
-
-                      {subscription.status === 'cancelled' && (
-                        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
-                          <h4 className="font-semibold text-red-800 mb-2">Cancelled</h4>
-                          {subscription.cancellationDate && (
-                            <p className="text-red-700 text-sm">
-                              Cancelled on: {formatDate(subscription.cancellationDate)}
-                            </p>
-                          )}
-                          {subscription.cancellationReason && (
-                            <p className="text-red-700 text-sm mt-1">
-                              Reason: {subscription.cancellationReason}
-                            </p>
-                          )}
-                        </div>
-                      )}
-
-                      <div className="flex gap-3">
-                        {subscription.status === 'active' && (
-                          <>
-                            <button
-                              onClick={() => openModal(subscription._id, 'pause')}
-                              className="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600 transition-colors"
-                              disabled={actionLoading}
-                            >
-                              Pause Subscription
-                            </button>
-                            <button
-                              onClick={() => openModal(subscription._id, 'cancel')}
-                              className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
-                              disabled={actionLoading}
-                            >
-                              Cancel Subscription
-                            </button>
-                          </>
-                        )}
-                        
-                        {subscription.status === 'paused' && (
-                          <button
-                            onClick={() => handleReactivate(subscription._id)}
-                            className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
-                            disabled={actionLoading}
-                          >
-                            {actionLoading ? 'Reactivating...' : 'Reactivate Subscription'}
-                          </button>
-                        )}
-                      </div>
+                {actionType === 'pause' ? (
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Pause Start Date
+                      </label>
+                      <input
+                        type="date"
+                        value={pauseForm.startDate}
+                        onChange={(e) => setPauseForm({ ...pauseForm, startDate: e.target.value })}
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-green-500 focus:ring-0 transition-colors duration-200"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Pause End Date
+                      </label>
+                      <input
+                        type="date"
+                        value={pauseForm.endDate}
+                        onChange={(e) => setPauseForm({ ...pauseForm, endDate: e.target.value })}
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-green-500 focus:ring-0 transition-colors duration-200"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Reason (Optional)
+                      </label>
+                      <textarea
+                        value={pauseForm.reason}
+                        onChange={(e) => setPauseForm({ ...pauseForm, reason: e.target.value })}
+                        placeholder="Tell us why you're pausing..."
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-green-500 focus:ring-0 transition-colors duration-200 h-20 resize-none"
+                      />
                     </div>
                   </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      </main>
+                ) : (
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Cancellation Reason (Optional)
+                    </label>
+                    <textarea
+                      value={cancelForm.reason}
+                      onChange={(e) => setCancelForm({ ...cancelForm, reason: e.target.value })}
+                      placeholder="Help us improve by telling us why you're cancelling..."
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-green-500 focus:ring-0 transition-colors duration-200 h-24 resize-none"
+                    />
+                  </div>
+                )}
 
-      {/* Pause Modal */}
-      {actionType === 'pause' && selectedSubscription && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-md w-full">
-            <div className="p-6">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">Pause Subscription</h3>
-              
-              <form onSubmit={handlePauseSubmit}>
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Start Date
-                  </label>
-                  <input
-                    type="date"
-                    value={pauseForm.startDate}
-                    onChange={(e) => setPauseForm({ ...pauseForm, startDate: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                    required
-                  />
-                </div>
-
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    End Date
-                  </label>
-                  <input
-                    type="date"
-                    value={pauseForm.endDate}
-                    onChange={(e) => setPauseForm({ ...pauseForm, endDate: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                    required
-                  />
-                </div>
-
-                <div className="mb-6">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Reason (Optional)
-                  </label>
-                  <textarea
-                    value={pauseForm.reason}
-                    onChange={(e) => setPauseForm({ ...pauseForm, reason: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                    rows={3}
-                    placeholder="Why are you pausing your subscription?"
-                  />
-                </div>
-
-                <div className="flex gap-3">
+                <div className="flex space-x-3 mt-6">
                   <button
-                    type="submit"
-                    disabled={actionLoading}
-                    className="flex-1 bg-yellow-500 text-white py-2 px-4 rounded-lg hover:bg-yellow-600 transition-colors disabled:opacity-50"
-                  >
-                    {actionLoading ? 'Pausing...' : 'Pause Subscription'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={closeModal}
-                    className="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-400 transition-colors"
+                    onClick={() => setShowActionModal(false)}
+                    className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-3 px-4 rounded-xl transition-all duration-200"
                   >
                     Cancel
                   </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Cancel Modal */}
-      {actionType === 'cancel' && selectedSubscription && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-md w-full">
-            <div className="p-6">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">Cancel Subscription</h3>
-              <p className="text-gray-600 mb-6">
-                Are you sure you want to cancel this subscription? This action cannot be undone.
-              </p>
-              
-              <form onSubmit={handleCancelSubmit}>
-                <div className="mb-6">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Reason (Optional)
-                  </label>
-                  <textarea
-                    value={cancelForm.reason}
-                    onChange={(e) => setCancelForm({ ...cancelForm, reason: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                    rows={3}
-                    placeholder="Why are you cancelling your subscription?"
-                  />
-                </div>
-
-                <div className="flex gap-3">
                   <button
-                    type="submit"
-                    disabled={actionLoading}
-                    className="flex-1 bg-red-500 text-white py-2 px-4 rounded-lg hover:bg-red-600 transition-colors disabled:opacity-50"
+                    onClick={actionType === 'pause' ? handlePause : handleCancel}
+                    disabled={actionType === 'pause' && (!pauseForm.startDate || !pauseForm.endDate)}
+                    className={`flex-1 font-semibold py-3 px-4 rounded-xl transition-all duration-200 ${
+                      actionType === 'pause'
+                        ? 'bg-yellow-500 hover:bg-yellow-600 text-white'
+                        : 'bg-red-500 hover:bg-red-600 text-white'
+                    } disabled:opacity-50 disabled:cursor-not-allowed`}
                   >
-                    {actionLoading ? 'Cancelling...' : 'Cancel Subscription'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={closeModal}
-                    className="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-400 transition-colors"
-                  >
-                    Keep Subscription
+                    {actionType === 'pause' ? 'Pause Subscription' : 'Cancel Subscription'}
                   </button>
                 </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </main>
 
       <Footer />
-    </div>
+    </>
   );
 }
