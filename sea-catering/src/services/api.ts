@@ -91,18 +91,10 @@ const apiFetch = async (endpoint: string, options: RequestInit = {}) => {
   }
 
   try {
-    console.log('🔍 API Debug - Making request to:', url);
-    console.log('🔍 API Debug - Request config:', config);
-    
     const response = await fetch(url, config);
     
-    console.log('🔍 API Debug - Response status:', response.status);
-    console.log('🔍 API Debug - Response headers:', Object.fromEntries(response.headers.entries()));
-    
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error('🔍 API Debug - Error response:', errorText);
-      throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
     
     const data = await response.json();
