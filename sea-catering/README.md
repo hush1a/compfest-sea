@@ -1,7 +1,3 @@
-# 🍽️ SEA Catering
-
-A modern, professional meal delivery platform inspired by HelloFresh, built with cutting-edge technologies and beautiful UI/UX design. SEA Catering offers a seamless experience for discovering, customizing, and ordering premium meal plans.
-
 ## ✨ Features
 
 - **🎨 Modern Design System**: Glass-morphism effects, smooth animations, and professional green color palette
@@ -118,20 +114,6 @@ sea-catering/
 - **Loading States**: Skeleton loaders for better UX
 - **Modals & Overlays**: Contextual information display
 
-## 🚢 Deployment
-
-### Vercel (Recommended)
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme).
-
-1. Connect your repository to Vercel
-2. Configure environment variables (if any)
-3. Deploy with automatic CI/CD
-
-### Other Platforms
-- **Netlify**: Static site deployment
-- **Railway**: Full-stack deployment
-- **Docker**: Containerized deployment
-
 ## 📜 Available Scripts
 
 - `npm run dev` - Start development server with Turbopack
@@ -139,35 +121,4 @@ The easiest way to deploy your Next.js app is to use the [Vercel Platform](https
 - `npm run start` - Start production server
 - `npm run lint` - Run ESLint for code quality
 
-## 🔧 Development
 
-### Code Quality
-- TypeScript for type safety
-- ESLint for code consistency
-- Responsive design principles
-- Accessibility best practices
-
-### Performance
-- Next.js automatic optimizations
-- Image optimization
-- Code splitting
-- Tree shaking
-
-## 📚 Learn More
-
-- [Next.js Documentation](https://nextjs.org/docs) - Learn about Next.js features and API
-- [Tailwind CSS Documentation](https://tailwindcss.com/docs) - Utility-first CSS framework
-- [Framer Motion Documentation](https://www.framer.com/motion/) - Animation library
-- [React Hook Form Documentation](https://react-hook-form.com/) - Form management
-
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## 📄 License
-
-This project is licensed under the MIT License.
-
----
-
-Built with ❤️ using modern web technologies for an exceptional user experience.
