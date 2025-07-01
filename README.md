@@ -13,7 +13,7 @@ SEA Catering is a modern, full-stack meal subscription platform that connects cu
 ## 📚 Table of Contents
 
 - [Features](#-features)
-- [Tech Stack](#tech-stack)
+- [Tech Stack](https://github.com/hush1a/compfest-sea/blob/main/README.md#%EF%B8%8F-tech-stack)
 - [Sample Data & Testing](#-sample-data--testing)
 - [Project Structure](#-project-structure)
 - [Security Implementation](#-security-implementation)
