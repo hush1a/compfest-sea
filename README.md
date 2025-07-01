@@ -1,6 +1,6 @@
-# 🍽️ SEA Catering - Smart Meal Subscription Platform
+# SEA Catering 
 
-SEA Catering is a modern, full-stack meal subscription platform that connects customers with premium catering services. Built with Next.js 15 and Node.js, it offers a secure, scalable solution for meal plan subscriptions with comprehensive user and admin dashboards.
+SEA Catering is a modern, full-stack meal subscription platform that connects customers with premium catering services. Built with Next.js 15 and Node.js, it offers a secure, scalable solution for meal plan subscriptions with comprehensive user and admin dashboards. This project is made for Compfest 2025's Software Engineering Academy.
 
 ## 🌐 Live Demo
 
@@ -9,6 +9,17 @@ SEA Catering is a modern, full-stack meal subscription platform that connects cu
 - **Frontend**: https://compfest-sea-pi.vercel.app/
 - **Backend API**: https://compfest-sea-production.up.railway.app/
 - **Database**: MongoDB Atlas (Cloud)
+  
+## 📚 Table of Contents
+
+- [Features](#-features)
+- [Tech Stack](#-tech-stack)
+- [Sample Data & Testing](#-sample-data--testing)
+- [Project Structure](#-project-structure)
+- [Security Implementation](#-security-implementation)
+- [Production Deployment](#-production-deployment)
+- [License](#-license)
+
 
 ## ✨ Features
 
@@ -46,55 +57,59 @@ SEA Catering is a modern, full-stack meal subscription platform that connects cu
 - **Security Headers**: Helmet.js for enhanced security
 - **Password Security**: bcrypt hashing with salt rounds
 
-### 🎨 Design Features
-- **Modern UI**: Clean, responsive design with Tailwind CSS
-- **Consistent Branding**: Green color palette throughout
-- **Mobile-First**: Responsive design for all devices
-- **Accessibility**: Screen reader friendly components
-- **Loading States**: Smooth user experience with loading indicators
-
 ## 🏗️ Tech Stack
 
-### Frontend
-- **Next.js 15**: App Router with file-based routing
-- **React 19**: Latest React features and hooks
-- **TypeScript**: Type-safe development
-- **Tailwind CSS**: Utility-first styling
-- **React Hook Form**: Form handling and validation
+SEA Catering is built with a modern, scalable full-stack architecture using the latest stable technologies across the stack.
 
-### Backend
-- **Node.js**: Runtime environment
-- **Express.js**: Web application framework
-- **MongoDB**: NoSQL database with Mongoose ODM
-- **JWT**: Authentication tokens
-- **bcrypt**: Password hashing
-- **Helmet**: Security headers
-- **CORS**: Cross-origin resource sharing
-- **Express Rate Limit**: Request throttling
+### 💻 Frontend
 
-### Security Stack
-- **express-validator**: Input validation
-- **mongo-sanitize**: NoSQL injection prevention
-- **DOMPurify**: XSS protection
-- **express-mongo-sanitize**: Additional MongoDB protection
-- **Custom CSRF**: Cross-site request forgery protection
+| Technology           | Description                                                                 |
+|----------------------|-----------------------------------------------------------------------------|
+| **Next.js 15**       | React framework with App Router, server components, and file-based routing  |
+| **React 19**         | Latest React version with concurrent features and improved developer tools  |
+| **TypeScript**       | Type-safe development for better scalability and maintainability            |
+| **Tailwind CSS**     | Utility-first CSS framework for responsive, consistent UI design            |
+| **React Hook Form**  | High-performance form state management and validation                       |
+| **Axios**            | Promise-based HTTP client for making API requests                           |
 
-## 🚀 Quick Start
+---
 
-### 🌐 Try the Live Demo (Recommended)
+### 🧠 Backend
 
-**Instant Access - No Setup Required!**
+| Technology           | Description                                                                 |
+|----------------------|-----------------------------------------------------------------------------|
+| **Node.js**          | JavaScript runtime environment for building scalable server-side applications |
+| **Express.js**       | Minimalist web framework for building RESTful APIs                          |
+| **MongoDB**          | NoSQL database used for flexible and performant data storage                |
+| **Mongoose**         | MongoDB ODM for schema modeling and validation                              |
+| **JWT**              | JSON Web Tokens for secure authentication and session management            |
+| **bcrypt**           | Secure password hashing with configurable salt rounds                       |
 
-1. **Visit the Live Application**: https://compfest-sea-pi.vercel.app/
-2. **Browse Public Pages**: Explore meal plans, testimonials, and contact page
-3. **Test User Account**:
-   - Email: `test@example.com`
-   - Password: `password`
-   - Access: User dashboard and subscription management
-4. **Test Admin Account**:
-   - Email: `admin@seacatering.com`
-   - Password: `password`
-   - Access: Admin dashboard with business analytics
+---
+
+### 🔐 Security & Middleware
+
+| Tool / Library         | Purpose                                                                 |
+|------------------------|-------------------------------------------------------------------------|
+| **express-validator**  | Request input validation and sanitization                               |
+| **helmet**             | Sets secure HTTP headers to mitigate common web vulnerabilities         |
+| **cors**               | Configures Cross-Origin Resource Sharing policies                       |
+| **rate-limit**         | Throttles repeated requests to prevent brute force and abuse            |
+| **mongo-sanitize**     | Prevents NoSQL injection by filtering malicious query content           |
+| **DOMPurify**          | Sanitizes HTML inputs to prevent XSS attacks                            |
+| **Custom CSRF Tokens** | Stateless CSRF protection using a double-submit cookie pattern          |
+
+---
+
+### 🌐 Deployment & Infrastructure
+
+| Platform / Service      | Role                                                                   |
+|-------------------------|------------------------------------------------------------------------|
+| **Vercel**              | Frontend hosting with CI/CD for Next.js                                |
+| **Railway**             | Backend hosting with Node.js runtime and auto-deploy support           |
+| **MongoDB Atlas**       | Cloud-hosted MongoDB cluster with secure authentication and backups    |
+| **Environment Variables** | Secure configuration management for local and cloud environments    |
+| **HTTPS (SSL)**         | Full encryption of user data in transit across frontend and backend    |
 
 ### 💻 Local Development Setup
 
@@ -203,8 +218,6 @@ This creates:
 
 ### Live Test Accounts
 
-**🔑 Ready-to-use accounts on the live demo:**
-
 **Regular User Account:**
 - Email: test@example.com
 - Password: password
@@ -214,33 +227,6 @@ This creates:
 - Email: admin@seacatering.com
 - Password: password
 - Access: Admin dashboard, business analytics
-
-### Testing Guide
-
-1. **🌐 Live Demo Testing**:
-   - Visit: https://compfest-sea-pi.vercel.app/
-   - Browse meal plans without login
-   - Test user registration/login
-   - Access user dashboard with test account
-
-2. **User Dashboard Testing**:
-   - Login with test@example.com / password
-   - Navigate to Dashboard
-   - Test subscription pause/cancel/reactivate
-   - Verify subscription history
-
-3. **Admin Dashboard Testing**:
-   - Login with admin@seacatering.com / password
-   - Navigate to Admin Dashboard
-   - Test date range filtering
-   - Verify analytics data display
-   - Check MRR calculations
-
-4. **Security Testing**:
-   - Try accessing admin routes as regular user (should redirect)
-   - Test rate limiting by rapid requests
-   - Verify CSRF protection on forms
-   - Test unauthorized API access
 
 ## 📁 Project Structure
 
@@ -333,39 +319,6 @@ compfest-sea/
 - **✅ Database**: MongoDB Atlas (Cloud)
 - **✅ SSL**: HTTPS enabled on all services
 
-### Live URLs
-- **Frontend**: https://compfest-sea-pi.vercel.app/
-- **Backend API**: https://compfest-sea-production.up.railway.app/
-- **Database**: MongoDB Atlas cluster (secure connection)
-
-### Deployment Platforms
-
-**Frontend (Vercel):**
-- Framework: Next.js 15
-- Build Command: `npm run build`
-- Environment Variables:
-  ```env
-  NEXT_PUBLIC_API_URL=https://compfest-sea-production.up.railway.app
-  ```
-
-**Backend (Railway):**
-- Runtime: Node.js
-- Start Command: `npm start`
-- Environment Variables:
-  ```env
-  MONGODB_URI=mongodb+srv://[credentials]@sea-catering.xnh3llg.mongodb.net/
-  NODE_ENV=production
-  JWT_SECRET=[secure-production-secret]
-  FRONTEND_URL=https://compfest-sea-pi.vercel.app/
-  PORT=5000
-  ```
-
-**Database (MongoDB Atlas):**
-- Cluster: Free tier M0
-- Region: Asia-Southeast (Singapore)
-- Network Access: Configured for Railway
-- Database Authentication: Enabled
-
 ### Build Commands
 
 **Frontend:**
@@ -383,63 +336,6 @@ cd sea-catering-backend
 npm start
 ```
 
-### Deployment Checklist
-- [x] ✅ Production database (MongoDB Atlas)
-- [x] ✅ Backend deployment (Railway)
-- [x] ✅ Frontend deployment (Vercel)
-- [x] ✅ Environment variables configured
-- [x] ✅ CORS settings for production
-- [x] ✅ SSL certificates enabled
-- [x] ✅ Test data populated
-- [x] ✅ Rate limiting configured
-- [x] ✅ Security headers enabled
-- [x] ✅ Authentication working
-- [x] ✅ Admin dashboard functional
-
-## 🔄 Future Enhancements
-
-### Planned Features
-- **Payment Integration**: Stripe/PayPal for subscription billing
-- **Email Notifications**: Subscription updates and reminders
-- **Advanced Analytics**: Customer lifetime value, churn analysis
-- **Mobile App**: React Native companion app
-- **Inventory Management**: Real-time ingredient tracking
-- **Multi-tenant**: Support for multiple catering companies
-
-### Technical Improvements
-- **Testing Suite**: Unit and integration tests
-- **Performance**: Caching with Redis
-- **Monitoring**: Application performance monitoring
-- **Logging**: Structured logging with Winston
-- **Documentation**: API documentation with Swagger
-- **CI/CD**: Automated deployment pipeline
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
 ## 📝 License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
-
-## 🆘 Support
-
-For support and questions:
-- Create an issue in the repository
-- Check existing documentation
-- Review the testing guide above
-
-## 🏆 Acknowledgments
-
-- Built for COMPFEST SEA Challenge
-- Modern web development best practices
-- Security-first development approach
-- User-centered design principles
-
----
-
-**SEA Catering** - Bringing premium meal subscriptions to the digital age 🍽️✨
