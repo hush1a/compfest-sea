@@ -9,6 +9,18 @@ SEA Catering is a modern, full-stack meal subscription platform that connects cu
 - **Frontend**: https://compfest-sea-pi.vercel.app/
 - **Backend API**: https://compfest-sea-production.up.railway.app/
 - **Database**: MongoDB Atlas (Cloud)
+
+### Live Test Accounts
+
+**Regular User Account:**
+- Email: test@example.com
+- Password: password
+- Access: User dashboard, subscription management
+
+**Admin Account:**
+- Email: admin@seacatering.com
+- Password: password
+- Access: Admin dashboard, business analytics
   
 ## 📚 Table of Contents
 
@@ -71,7 +83,8 @@ SEA Catering is built with a modern, scalable full-stack architecture using the 
 | **Tailwind CSS**     | Utility-first CSS framework for responsive, consistent UI design            |
 | **React Hook Form**  | High-performance form state management and validation                       |
 | **Axios**            | Promise-based HTTP client for making API requests                           |
-
+| **Framer Motion**            | Production-ready motion library for smooth animations and transitions
+| **Lucide React**            | Beautiful, customizable icon library with consistent design language
 ---
 
 ### 🧠 Backend
