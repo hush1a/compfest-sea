@@ -209,13 +209,27 @@ const RegisterPage: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex relative">
+      {/* Background Image with Blur */}
+      <div className="absolute inset-0">
+        <div 
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{
+            backgroundImage: `url('https://images.unsplash.com/photo-1498837167922-ddd27525d352?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80')`
+          }}
+        />
+        {/* Blur Overlay */}
+        <div className="absolute inset-0 backdrop-blur-sm bg-white/50" />
+        {/* Additional Gradient Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-br from-emerald-50/60 via-white/40 to-green-50/60" />
+      </div>
+
       {/* Left Side - Branding */}
       <motion.div 
         initial={{ opacity: 0, x: -50 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.8 }}
-        className="hidden lg:flex lg:flex-1 bg-gradient-to-br from-emerald-600 via-emerald-500 to-green-600 relative overflow-hidden"
+        className="hidden lg:flex lg:flex-1 bg-gradient-to-br from-emerald-600/90 via-emerald-500/90 to-green-600/90 backdrop-blur-md relative overflow-hidden z-10"
       >
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-10">
@@ -299,7 +313,7 @@ const RegisterPage: React.FC = () => {
       </motion.div>
 
       {/* Right Side - Register Form */}
-      <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 bg-gray-50">
+      <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 bg-white/80 backdrop-blur-md relative z-10">
         <motion.div
           variants={containerVariants}
           initial="hidden"

@@ -81,7 +81,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedSubscription, setSelectedSubscription] = useState<string | null>(null);
-  const [actionType, setActionType] = useState<'pause' | 'cancel' | null>(null);
+  const [actionType, setActionType] = useState<'pause' | 'cancel' | 'reactivate' | null>(null);
   const [showActionModal, setShowActionModal] = useState(false);
   const [pauseForm, setPauseForm] = useState<PauseFormData>({
     startDate: '',

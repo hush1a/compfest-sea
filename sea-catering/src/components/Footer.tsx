@@ -8,8 +8,7 @@ import {
   Mail, 
   Phone, 
   MapPin, 
-  Facebook, 
-  Twitter, 
+  Facebook,  
   Instagram, 
   Linkedin, 
   Youtube,
@@ -86,7 +85,6 @@ const Footer = () => {
   const socialLinks = [
     { name: 'Facebook', icon: Facebook, href: 'https://facebook.com/seacatering', color: 'hover:text-blue-500' },
     { name: 'Instagram', icon: Instagram, href: 'https://instagram.com/seacatering', color: 'hover:text-pink-500' },
-    { name: 'Twitter', icon: Twitter, href: 'https://twitter.com/seacatering', color: 'hover:text-blue-400' },
     { name: 'LinkedIn', icon: Linkedin, href: 'https://linkedin.com/company/seacatering', color: 'hover:text-blue-600' },
     { name: 'YouTube', icon: Youtube, href: 'https://youtube.com/seacatering', color: 'hover:text-red-500' }
   ];
@@ -254,40 +252,24 @@ const Footer = () => {
           <div className="container mx-auto px-6 py-6">
             <div className="flex flex-col md:flex-row items-center justify-between gap-6">
               <div className="flex flex-col md:flex-row items-center gap-6">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-emerald-600 rounded-lg">
-                    <Phone className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-400">24/7 Customer Support</p>
-                    <p className="font-semibold">+62 812 3456 789</p>
-                  </div>
+                <div>
+                  <p className="text-xs text-gray-400">24/7 Customer Support</p>
+                  <p className="font-semibold">+62 812 3456 789</p>
                 </div>
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-blue-600 rounded-lg">
-                    <Mail className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-400">Email Support</p>
-                    <p className="font-semibold">support@seacatering.com</p>
-                  </div>
+                <div>
+                  <p className="text-xs text-gray-400">Email Support</p>
+                  <p className="font-semibold">support@seacatering.com</p>
                 </div>
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-purple-600 rounded-lg">
-                    <MapPin className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-400">Headquarters</p>
-                    <p className="font-semibold">Jakarta, Indonesia</p>
-                  </div>
+                <div>
+                  <p className="text-xs text-gray-400">Headquarters</p>
+                  <p className="font-semibold">Jakarta, Indonesia</p>
                 </div>
               </div>
               
               <div className="text-center md:text-right">
                 <p className="text-xs text-gray-400 mb-1">Serving healthy meals since 2020</p>
                 <div className="flex items-center gap-2 justify-center md:justify-end">
-                  <Heart className="w-4 h-4 text-red-500" />
-                  <span className="text-sm font-semibold">Made with passion in Indonesia</span>
+                  <span className="text-sm font-semibold">Made with passion in Indonesia.</span>
                 </div>
               </div>
             </div>
@@ -304,17 +286,8 @@ const Footer = () => {
           <div className="container mx-auto px-6 py-4">
             <div className="flex flex-col md:flex-row items-center justify-between gap-4">
               <p className="text-sm text-gray-400">
-                © 2025 SEA Catering. All rights reserved. Bringing healthy meals to Indonesia.
+                © 2025 SEA Catering. All rights reserved. 
               </p>
-              <div className="flex items-center gap-6 text-sm text-gray-400">
-                <Link href="/accessibility" className="hover:text-white transition-colors">
-                  Accessibility
-                </Link>
-                <Link href="/sitemap" className="hover:text-white transition-colors">
-                  Sitemap
-                </Link>
-                <span>Version 2.0</span>
-              </div>
             </div>
           </div>
         </motion.div>
